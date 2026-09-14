@@ -171,17 +171,22 @@
   function distanceM(p, q) { return RT.haversine(p, q) * 1000; }
   function passePres(geom, point, seuilM) { return geom.some(function (g) { return distanceM(g, point) < seuilM; }); }
 
-  /* Polygones d'exclusion selon l'état du carrefour et le véhicule */
+  /* Zones d'exclusion selon l'état du carrefour et le véhicule : polygones (précis) et points le long
+     des mêmes axes (repli si le serveur refuse les polygones : chaque point exclut le tronçon le plus proche) */
   function exclusions(etat, veh, ignorerChantier) {
-    var z = DATA.zoneChantier, polys = [], fermes = DATA.etats[etat].closed;
+    var z = DATA.zoneChantier, polys = [], points = [], fermes = DATA.etats[etat].closed;
+    function echantillonner(origine, cap, de, a, pas) { for (var d = de; d <= a; d += pas) { var q = polaire(origine, d, cap); points.push({ lat: Math.round(q[0] * 1e6) / 1e6, lon: Math.round(q[1] * 1e6) / 1e6 }); } }
     if (!ignorerChantier) z.branches.forEach(function (br) {
-      if (fermes.indexOf(br.axe) !== -1) polys.push(rectangleAxe(z.centre, br.cap, br.de, br.a, z.largeur));
+      if (fermes.indexOf(br.axe) === -1) return;
+      polys.push(rectangleAxe(z.centre, br.cap, br.de, br.a, z.largeur));
+      echantillonner(z.centre, br.cap, br.de + 10, br.a, 30);
     });
     if (veh.maxWeight > DATA.traverse.limiteTonnes && !veh.agri) {
-      var vc = z.voieCommunale, L = distanceM(vc.a, vc.b);
-      polys.push(rectangleAxe(vc.a, capEntre(vc.a, vc.b), vc.retrait, L - vc.retrait, vc.largeur));
+      var vc = z.voieCommunale, L = distanceM(vc.a, vc.b), cap = capEntre(vc.a, vc.b);
+      polys.push(rectangleAxe(vc.a, cap, vc.retrait, L - vc.retrait, vc.largeur));
+      echantillonner(vc.a, cap, 60, L - 60, 60);
     }
-    return polys;
+    return { polygones: polys, points: points.slice(0, 50), n: polys.length };
   }
 
   /* Décodage du tracé Valhalla (polyline, précision 1e-6) */
@@ -198,30 +203,47 @@
     return pts;
   }
 
-  /* Appel du moteur d'itinéraire sur le réseau routier réel */
-  function routerReel(points, veh, polys, signal) {
-    var costing = veh.id === 'pl' ? 'truck' : (veh.id === 'velo' ? 'bicycle' : 'auto');
-    var body = {
-      locations: points.map(function (p) { return { lat: p[0], lon: p[1], type: 'break' }; }),
-      costing: costing,
-      costing_options: costing === 'truck' ? { truck: { weight: 19, height: 4, width: 2.5, length: 12 } } : {},
-      exclude_polygons: polys,
-      units: 'kilometers', language: 'fr-FR',
-      directions_options: { units: 'kilometers', language: 'fr-FR' }
-    };
-    return fetch(DATA.valhallaUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: signal })
-      .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.trip) throw new Error(j.error || 'erreur ' + r.status); return j.trip; }); })
-      .then(function (trip) {
-        var geom = [], etapes = [];
-        trip.legs.forEach(function (leg) {
-          var pts = decoderShape(leg.shape); if (geom.length) pts = pts.slice(1); geom = geom.concat(pts);
-          (leg.maneuvers || []).forEach(function (m) {
-            if (m.type === 4 || m.type === 5 || m.type === 6) return; // arrivée
-            etapes.push({ instruction: m.instruction, rues: m.street_names || [], km: m.length || 0 });
-          });
-        });
-        return { geom: geom, km: trip.summary.length, min: trip.summary.time / 60, etapes: etapes };
+  /* Appel du moteur d'itinéraire sur le réseau routier réel (requête GET simple, sans pré-vérification CORS) */
+  function appelValhalla(body, signal) {
+    var url = DATA.valhallaUrl + '?json=' + encodeURIComponent(JSON.stringify(body));
+    return fetch(url, { signal: signal, mode: 'cors' }).then(function (r) {
+      return r.text().then(function (t) {
+        var j = null; try { j = JSON.parse(t); } catch (e) { /* réponse non JSON */ }
+        if (!r.ok || !j || !j.trip) {
+          var err = new Error(j && j.error ? j.error : 'réponse ' + r.status + (t ? ' : ' + t.slice(0, 120) : ''));
+          err.status = r.status; err.code = j && j.error_code; throw err;
+        }
+        return j.trip;
       });
+    });
+  }
+  function routerReel(points, veh, excl, signal) {
+    var costing = veh.id === 'pl' ? 'truck' : (veh.id === 'velo' ? 'bicycle' : 'auto');
+    var base = {
+      locations: points.map(function (p) { return { lat: Math.round(p[0] * 1e6) / 1e6, lon: Math.round(p[1] * 1e6) / 1e6, type: 'break' }; }),
+      costing: costing,
+      units: 'kilometers', language: 'fr-FR'
+    };
+    if (costing === 'truck') base.costing_options = { truck: { weight: 19, height: 4, width: 2.5, length: 12 } };
+    var avecPolygones = Object.assign({}, base); if (excl.polygones.length) avecPolygones.exclude_polygons = excl.polygones;
+    var avecPoints = Object.assign({}, base); if (excl.points.length) avecPoints.exclude_locations = excl.points;
+    var promesse = appelValhalla(avecPolygones, signal);
+    if (excl.polygones.length) promesse = promesse.catch(function (e) {
+      // le serveur refuse ou ignore les polygones (limites de service) : on exclut les tronçons par des points
+      if (e.name === 'AbortError' || (e.status && e.status >= 500)) throw e;
+      return appelValhalla(avecPoints, signal);
+    });
+    return promesse.then(function (trip) {
+      var geom = [], etapes = [];
+      trip.legs.forEach(function (leg) {
+        var pts = decoderShape(leg.shape); if (geom.length) pts = pts.slice(1); geom = geom.concat(pts);
+        (leg.maneuvers || []).forEach(function (m) {
+          if (m.type === 4 || m.type === 5 || m.type === 6) return; // arrivée
+          etapes.push({ instruction: m.instruction, rues: m.street_names || [], km: m.length || 0 });
+        });
+      });
+      return { geom: geom, km: trip.summary.length, min: trip.summary.time / 60, etapes: etapes };
+    });
   }
 
   /* Candidat passant par la voie communale : la cartographie la décrit à sens unique, alors qu'elle est
@@ -279,7 +301,7 @@
     var traverseUtile = !riverain && DATA.etats[r.etat].closed.length > 0 && (veh.maxWeight <= DATA.traverse.limiteTonnes || veh.agri);
     Promise.all([
       routerReel([depart, arrivee], veh, polys, ctrl.signal).catch(function (e) { return { erreur: e }; }),
-      polys.length === polysNormal.length ? Promise.resolve(null) : routerReel([depart, arrivee], veh, polysNormal, ctrl.signal).catch(function () { return null; }),
+      polys.n === polysNormal.n ? Promise.resolve(null) : routerReel([depart, arrivee], veh, polysNormal, ctrl.signal).catch(function () { return null; }),
       traverseUtile ? routerViaTraverse(depart, arrivee, veh, polys, ctrl.signal) : Promise.resolve(null)
     ]).then(function (res) {
       clearTimeout(timer); if (ctrl !== requeteEnCours) return;
@@ -315,8 +337,10 @@
     var fermes = DATA.etats[r.etat].closed;
     var html = entete;
     if (passeChantier && fermes.length && !riverain) {
-      html += alerte('danger', '⛔', 'Le trajet calculé traverse la zone de travaux fermée : le service de calcul n\'a pas pu appliquer la fermeture. Suivez la déviation signalée sur place.') + '</div>';
-      $('#resultat').innerHTML = html; return;
+      html += alerte('danger', '⛔', 'Le trajet calculé par le service traverse la zone de travaux fermée : la fermeture n\'a pas pu être appliquée. Ne suivez pas ce tracé, suivez la déviation signalée sur place.') + '</div>';
+      $('#resultat').innerHTML = html;
+      L.polyline(res.geom, { color: '#c62828', weight: 4, opacity: .7, dashArray: '6 8' }).addTo(coucheRoute);
+      return;
     }
     html += '<div class="kpi"><div><b>' + fmtKm(res.km) + '</b><span>par la route</span></div><div><b>' + fmtMin(res.min) + '</b><span>durée estimée</span></div>';
     if (resNormal && res.km - resNormal.km > 0.3) html += '<div><b>+' + fmtKm(res.km - resNormal.km) + '</b><span>détour dû aux travaux</span></div>';
@@ -349,7 +373,7 @@
     }
     var etapes = RT.etapes(NET, res);
     var passeChantier = res.edges.some(function (e) { return e.kind === 'chantier'; });
-    html += alerte('attention', '📡', 'Le service de calcul sur le réseau routier est momentanément indisponible : voici un <b>itinéraire schématique</b> (villages et routes à suivre), sans tracé détaillé.');
+    html += alerte('attention', '📡', 'Le service de calcul sur le réseau routier est momentanément indisponible : voici un <b>itinéraire schématique</b> (villages et routes à suivre), sans tracé détaillé.' + (err && err.message ? '<br><small>Détail technique : ' + esc(err.name === 'AbortError' ? 'délai dépassé (12 s)' : err.message) + '</small>' : ''));
     html += '<div class="kpi"><div><b>≈ ' + fmtKm(res.km) + '</b><span>distance estimée</span></div></div>';
     html += alertesCommunes(r, veh, riverain, passeChantier, !!res.flags.traverse);
     html += '<ol class="etapes"><li><span class="num dep">D</span><span class="route">' + esc(nomNoeud(from)) + '<small>Départ</small></span><span></span></li>';
