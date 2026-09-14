@@ -1,7 +1,7 @@
-# Travaux de la traversée de Monclar-sur-l'Osse – site d'information et d'itinéraires
+# Travaux de la traversée de Monclar-sur-Losse – site d'information et d'itinéraires
 
 Site web statique (HTML / CSS / JavaScript, sans dépendance serveur) présentant le projet de
-sécurisation du carrefour RD 34 / RD 159 à Monclar-sur-l'Osse (Gers) et permettant aux habitants
+sécurisation du carrefour RD 34 / RD 159 à Monclar-sur-Losse (Gers) et permettant aux habitants
 des villages voisins (Bars, Pouylebon, Saint-Christaud, …) de trouver **l'itinéraire adapté à leur
 véhicule, à la date de leur trajet et à leur destination**.
 
@@ -19,16 +19,29 @@ véhicule, à la date de leur trajet et à leur destination**.
 - **Déviations** : plans de signalisation, règle des 9 t, itinéraires poids lourds par RD, emplacement des panneaux.
 - **Riverains** : accès, transport scolaire, piétons, dates à retenir, contact.
 
-## Mise en ligne
+## Mise en ligne (GitHub Pages, gratuit, sans nom de domaine)
 
-Le site est constitué de fichiers statiques : il suffit de servir le dossier.
+Le site est constitué de fichiers statiques : GitHub Pages l'héberge gratuitement en HTTPS,
+à l'adresse `https://<compte>.github.io/Mairie_Monclar/`.
 
-- **GitHub Pages** : *Settings → Pages → Source : Deploy from a branch*, choisir la branche et le dossier `/ (root)`.
-  Le fichier `.nojekyll` est déjà présent.
-- **Hébergement de la commune** : copier l'ensemble du dossier (`index.html`, `assets/`, `docs/`) sur le serveur.
-- **Test local** : `python3 -m http.server 8000` puis ouvrir <http://localhost:8000>.
+1. Dans le dépôt GitHub : **Settings → Pages**.
+2. Dans *Build and deployment*, **Source : Deploy from a branch**.
+3. Choisir la branche qui contient le site et le dossier **/ (root)**, puis **Save**.
+4. Après une à deux minutes, l'adresse publique s'affiche en haut de la page *Pages*.
+   Chaque nouvelle modification poussée sur la branche est mise en ligne automatiquement.
+
+**Fin du chantier** : pour retirer le site, revenir dans *Settings → Pages* et choisir
+*Source : None* (ou rendre le dépôt privé, ou le supprimer). L'adresse cesse de répondre aussitôt.
+
+Autres options : copier le dossier sur l'hébergement de la commune, ou test local avec
+`python3 -m http.server 8000` puis <http://localhost:8000>.
 
 La géolocalisation du navigateur nécessite une page servie en **HTTPS** (GitHub Pages l'est par défaut).
+
+**Poids et mobile** : la page pèse environ 450 ko au premier affichage (dont la bibliothèque de
+cartographie), puis charge les tuiles de carte à la demande et les images des plans uniquement
+lorsqu'elles arrivent à l'écran. La mise en page s'adapte du téléphone (menu défilant, carte
+réduite, formulaire en pleine largeur) à l'écran d'ordinateur.
 
 ## Structure
 
@@ -40,7 +53,7 @@ assets/js/network.js        graphe routier simplifié : communes, jonctions, tro
 assets/js/router.js         moteur d'itinéraire (Dijkstra avec contraintes de date et de tonnage)
 assets/js/app.js            interface (formulaire, carte Leaflet, calendrier)
 assets/vendor/leaflet/      bibliothèque Leaflet 1.9.4 (licence BSD-2)
-assets/img/                 plans et cartes issus des documents du chantier
+assets/img/                 plans et cartes issus des documents du chantier, logo communal (SVG redessiné)
 docs/                       planning et plan d'exécution (PDF)
 tests/router.test.js        tests du moteur : `node tests/router.test.js`
 ```
@@ -86,7 +99,7 @@ Les documents fournis ne contiennent pas de coordonnées géographiques ; certai
 
 ## Sources
 
-- DESC de déviation « Monclar-sur-l'Osse – traversée du village » (CARRERE SAS) ;
+- DESC de déviation « Monclar-sur-Losse – traversée du village » (CARRERE SAS) ;
 - Planning des travaux mis à jour le 04/09/2026 (CARRERE SAS) ;
 - Plan d'exécution voirie / assainissement indice B du 03/09/2026 (XMGE) ;
 - Plan de déviation par RD et zoom sur l'agglomération de Mirande ;

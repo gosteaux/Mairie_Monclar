@@ -87,7 +87,7 @@
       map.createPane('fond'); map.getPane('fond').style.zIndex = 150;
       var fondRenderer = L.svg({ pane: 'fond' });
       L.geoJSON(window.MONCLAR_COMMUNES, { renderer: fondRenderer, interactive: false,
-        style: function () { return { color: '#9fb3a6', weight: 1, fillColor: '#eef3ea', fillOpacity: 1 }; } }).addTo(map);
+        style: function () { return { color: '#8aa392', weight: 1.2, fillColor: '#e6efe0', fillOpacity: 1 }; } }).addTo(map);
     }
     var tuiles = L.tileLayer(DATA.tuiles.url, { attribution: DATA.tuiles.attribution, maxZoom: 19 }).addTo(map);
     var erreursTuiles = 0;
@@ -101,7 +101,7 @@
     Object.keys(NET.nodes).forEach(function (id) {
       var n = NET.nodes[id];
       if (n.type !== 'village' || id === 'monclar') return;
-      L.circleMarker([n.lat, n.lon], { radius: 5, color: '#1f4e79', weight: 2, fillColor: '#fff', fillOpacity: 1 })
+      L.circleMarker([n.lat, n.lon], { radius: 5, color: '#1e4b3d', weight: 2, fillColor: '#fff', fillOpacity: 1 })
         .bindTooltip(n.name, { permanent: true, direction: 'right', className: 'village-label', offset: [6, 0] })
         .on('click', function () { $('#arrivee').value = id; })
         .addTo(coucheMarqueurs);
@@ -216,7 +216,7 @@
     // tracé schématique immédiat
     var geom = res.geom.slice();
     if (positionUtilisateur && from === positionUtilisateur.villageId) geom.unshift([positionUtilisateur.lat, positionUtilisateur.lon]);
-    var schema = L.polyline(geom, { color: '#1f4e79', weight: 5, opacity: .8, dashArray: '10 8' }).addTo(coucheSchema);
+    var schema = L.polyline(geom, { color: '#1e4b3d', weight: 5, opacity: .8, dashArray: '10 8' }).addTo(coucheSchema);
     L.circleMarker(geom[0], { radius: 8, color: '#2e7d32', fillColor: '#2e7d32', fillOpacity: 1 }).bindTooltip('Départ').addTo(coucheSchema);
     L.circleMarker(geom[geom.length - 1], { radius: 8, color: '#c62828', fillColor: '#c62828', fillOpacity: 1 }).bindTooltip('Arrivée').addTo(coucheSchema);
     map.fitBounds(schema.getBounds().pad(0.15));
@@ -240,7 +240,7 @@
         if (!j.routes || !j.routes[0]) throw new Error('pas de route');
         var route = j.routes[0];
         coucheSchema.eachLayer(function (l) { if (l instanceof L.Polyline && !(l instanceof L.CircleMarker)) coucheSchema.removeLayer(l); });
-        var line = L.geoJSON(route.geometry, { style: { color: '#1f4e79', weight: 6, opacity: .9 } }).addTo(coucheRoute);
+        var line = L.geoJSON(route.geometry, { style: { color: '#1e4b3d', weight: 6, opacity: .9 } }).addTo(coucheRoute);
         L.geoJSON(route.geometry, { style: { color: '#fff', weight: 10, opacity: .6 } }).addTo(coucheRoute).bringToBack();
         map.fitBounds(line.getBounds().pad(0.12));
         var km = route.distance / 1000, min = route.duration / 60;

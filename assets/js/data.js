@@ -1,17 +1,17 @@
-/* Données du chantier – sécurisation de la traversée de Monclar-sur-l'Osse (RD 34 / RD 159).
+/* Données du chantier – sécurisation de la traversée de Monclar-sur-Losse (RD 34 / RD 159).
    Sources : DESC de déviation (CARRERE SAS), planning travaux mis à jour le 04/09/2026,
    plan d'exécution indice B du 03/09/2026 (XMGE), plan de déviation par RD.
    Les dates sont prévisionnelles : la signalisation mise en place sur le terrain prévaut toujours. */
 window.MONCLAR_DATA = {
   commune: {
-    nom: "Monclar-sur-l'Osse",
-    adresseMairie: "Mairie – Au Village, 32300 Monclar-sur-l'Osse",
+    nom: "Monclar-sur-Losse",
+    adresseMairie: "Mairie – Au Village, 32300 Monclar-sur-Losse",
     /* Renseigner ici le téléphone / courriel de la mairie si souhaité (laisser vide pour ne rien afficher) */
     telephone: "",
     courriel: ""
   },
   acteurs: [
-    { role: "Maître d'ouvrage", nom: "Mairie de Monclar-sur-l'Osse", detail: "Au Village – 32300 Monclar-sur-l'Osse" },
+    { role: "Maître d'ouvrage", nom: "Mairie de Monclar-sur-Losse", detail: "Au Village – 32300 Monclar-sur-Losse (« Monclar-sur-l'Osse » sur les plans)" },
     { role: "Maître d'œuvre", nom: "XMGE", detail: "51 rue Montablon – 32500 Fleurance" },
     { role: "Entreprise de travaux", nom: "CARRERE SAS", detail: "391 route de Gimont – 32120 Mauvezin" },
     { role: "Géomètres", nom: "SELARL de Géomètres Experts Associés", detail: "Toulouse · Auch · Condom · Fleurance · Vic-Fezensac" }

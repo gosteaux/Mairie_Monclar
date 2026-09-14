@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Logo de la commune de Monclar-sur-Losse">
+  <!-- Redessiné en vectoriel d'après le logo communal : clocher sur la colline, prairies, champs et l'Osse -->
+  <path fill="#1e4b3d" d="M0 468C40 340 120 200 190 188c40-6 70 30 100 60l30 24 36-4c60 34 120 76 168 120 20 20 32 44 38 68l-12 12H0z"/>
+  <path fill="#1e4b3d" d="M312 22l-32 96h64z"/>
+  <rect fill="#1e4b3d" x="270" y="116" width="84" height="16"/>
+  <rect fill="#1e4b3d" x="283" y="132" width="58" height="168"/>
+  <rect fill="#fff" x="302" y="150" width="20" height="46" rx="10"/>
+  <path fill="#4e7f3a" d="M40 470c90-110 240-160 390-150 60 6 110 34 150 78l-6 72z"/>
+  <path fill="#9fb54a" d="M190 470c110-70 260-92 400-58l-4 58z"/>
+  <path fill="#e9b93b" d="M0 470c70-50 170-52 272 0l24 40H0z"/>
+  <path fill="none" stroke="#c9922a" stroke-width="12" stroke-linecap="round" d="M20 486c70-34 150-34 230 6M12 512c60-28 130-28 200 4M40 536c50-16 100-16 150 4"/>
+  <path fill="#fff" d="M0 500c60 6 120-4 200-30 80-26 170-44 250-42 80 2 140 16 150 20v40c-60-14-150-16-240 6-90 22-170 50-250 54-60 4-90-6-110-12z"/>
+  <path fill="#3f9db0" d="M30 560c70 10 150-6 240-40 90-34 200-52 330-40v34c-110-6-210 10-300 44-80 30-170 44-260 30z"/>
+  <path fill="#7ec8d4" d="M40 580c110 14 230-14 340-48 80-24 150-30 220-24v16c-90 2-190 20-280 52-100 36-200 50-280 40z"/>
+</svg>

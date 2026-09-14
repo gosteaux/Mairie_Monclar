@@ -1,11 +1,11 @@
-/* Réseau routier simplifié autour de Monclar-sur-l'Osse.
+/* Réseau routier simplifié autour de Monclar-sur-Losse.
    Généré depuis les centroïdes des communes du Gers (données © contributeurs OpenStreetMap / gregoiredavid/france-geojson),
    avec des positions de bourg corrigées manuellement et des jonctions relevées sur le plan de déviation (DESC CARRERE SAS).
    Les nœuds marqués approx:true sont des centroïdes de commune (à affiner si besoin). Voir README.md. */
 window.MONCLAR_NETWORK = {
  "nodes": {
   "monclar": {
-   "name": "Monclar-sur-l'Osse (centre-bourg)",
+   "name": "Monclar-sur-Losse (centre-bourg)",
    "lat": 43.5308,
    "lon": 0.3192,
    "type": "village",

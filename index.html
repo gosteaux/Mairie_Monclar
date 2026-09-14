@@ -3,16 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Travaux de la traversée de Monclar-sur-l'Osse – Quel itinéraire prendre ?</title>
-  <meta name="description" content="Sécurisation du carrefour RD 34 / RD 159 à Monclar-sur-l'Osse : calendrier des fermetures, déviations et calcul de l'itinéraire adapté à votre véhicule pour les habitants de Bars, Pouylebon, Saint-Christaud et des villages voisins.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231f4e79'/%3E%3Ctext x='32' y='42' font-size='30' text-anchor='middle'%3E🚧%3C/text%3E%3C/svg%3E">
+  <title>Travaux de la traversée de Monclar-sur-Losse – Quel itinéraire prendre ?</title>
+  <meta name="description" content="Sécurisation du carrefour RD 34 / RD 159 à Monclar-sur-Losse : calendrier des fermetures, déviations et calcul de l'itinéraire adapté à votre véhicule pour les habitants de Bars, Pouylebon, Saint-Christaud et des villages voisins.">
+  <meta name="theme-color" content="#1e4b3d">
+  <link rel="icon" type="image/svg+xml" href="assets/img/logo-monclar.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&display=swap">
   <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="#"><span class="blason" aria-hidden="true">🚧</span><span>Monclar-sur-l'Osse<small>Travaux de la traversée du village</small></span></a>
+    <a class="brand" href="#"><img class="logo" src="assets/img/logo-monclar.svg" alt="" width="46" height="46"><span class="brand-txt">Monclar-sur-Losse<small>Travaux de la traversée du village</small></span></a>
     <nav class="menu" aria-label="Sections">
       <a href="#itineraire">Itinéraire</a>
       <a href="#calendrier">Calendrier</a>
@@ -24,10 +28,13 @@
 </header>
 
 <div class="hero">
-  <div class="wrap">
+  <div class="wrap hero-grid">
+    <div>
     <h1>Quelle route prendre pendant les travaux du carrefour de Monclar&nbsp;?</h1>
     <p>La commune sécurise la traversée du village au carrefour des RD&nbsp;34 et RD&nbsp;159 de septembre à novembre 2026. Habitants de Bars, Pouylebon, Saint-Christaud et des villages voisins&nbsp;: indiquez votre point de départ, votre destination, la date et votre véhicule pour connaître l'itinéraire adapté.</p>
     <a class="cta" href="#itineraire">Trouver mon itinéraire</a>
+    </div>
+    <img class="hero-logo" src="assets/img/logo-monclar.svg" alt="Logo de la commune de Monclar-sur-Losse" width="220" height="220">
   </div>
 </div>
 
@@ -67,7 +74,7 @@
       <div>
         <div id="map" role="region" aria-label="Carte des itinéraires"></div>
         <div class="legende">
-          <span><i style="border-color:#1f4e79"></i>Itinéraire conseillé</span>
+          <span><i style="border-color:#1e4b3d"></i>Itinéraire conseillé</span>
           <span><i style="border-color:#c62828"></i>Tronçon barré</span>
           <span><i class="tiret" style="border-color:#ef6c00"></i>Voie communale (limitée à 9&nbsp;t)</span>
           <span><span class="pt" style="background:#c62828">🚧</span>Carrefour en travaux</span>
@@ -182,10 +189,13 @@
 </section>
 
 <footer>
-  <div class="wrap">
-    <p><b>Mairie de Monclar-sur-l'Osse</b> – Sécurisation et aménagements de la traversée du village (RD&nbsp;34 / RD&nbsp;159), 2026.</p>
+  <div class="wrap foot-grid">
+    <img src="assets/img/logo-monclar.svg" alt="" width="72" height="72" class="foot-logo">
+    <div>
+    <p><b>Mairie de Monclar-sur-Losse</b> – Sécurisation et aménagements de la traversée du village (RD&nbsp;34 / RD&nbsp;159), 2026.</p>
     <p>Sources&nbsp;: DESC de déviation et planning (CARRERE SAS), plan d'exécution indice B (XMGE), plan de déviation par RD. Itinéraires et dates indicatifs&nbsp;: la signalisation mise en place sur le terrain prévaut.</p>
     <p>Fond de carte © <a href="https://www.openstreetmap.org/copyright" rel="noopener">contributeurs OpenStreetMap</a> · Tracés routiers calculés par le service <a href="https://project-osrm.org/" rel="noopener">OSRM</a> · Cartographie <a href="https://leafletjs.com/" rel="noopener">Leaflet</a>. <span id="annee"></span></p>
+    </div>
   </div>
 </footer>
 
