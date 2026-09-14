@@ -15,8 +15,8 @@ véhicule, à la date de leur trajet et à leur destination**.
   - affichage des tronçons barrés, de la voie communale, des étapes, de la distance et du détour dû aux travaux ;
   - tracé routier détaillé calculé dans le navigateur par le service public OSRM, avec repli sur un tracé schématique si le service est indisponible.
 - **Calendrier** des périodes de travaux et des fermetures (semaines 35 à 49 de 2026).
-- **Présentation du projet** (aménagements, chiffres clés, acteurs, documents PDF).
-- **Déviations** : plans de signalisation, règle des 9 t, itinéraires poids lourds par RD, emplacement des panneaux.
+- **Présentation du projet** (aménagements, chiffres clés, acteurs).
+- **Déviations** : voie communale et règle des 9 t, périmètre du projet d'arrêté, corridors officiels D1 et D2, emplacement des panneaux.
 - **Riverains** : accès, transport scolaire, piétons, dates à retenir, contact.
 
 ## Mise en ligne (GitHub Pages, gratuit, sans nom de domaine)
@@ -53,8 +53,8 @@ assets/js/network.js        graphe routier simplifié : communes, jonctions, tro
 assets/js/router.js         moteur d'itinéraire (Dijkstra avec contraintes de date et de tonnage)
 assets/js/app.js            interface (formulaire, carte Leaflet, calendrier)
 assets/vendor/leaflet/      bibliothèque Leaflet 1.9.4 (licence BSD-2)
-assets/img/                 plans et cartes issus des documents du chantier, logo communal (SVG redessiné)
-docs/                       planning et plan d'exécution (PDF)
+assets/img/                 logo communal (SVG redessiné)
+assets/data/communes.js     limites simplifiées des communes (fond de secours)
 tests/router.test.js        tests du moteur : `node tests/router.test.js`
 ```
 
@@ -66,7 +66,7 @@ Tout se modifie dans `assets/js/data.js` sans toucher au code :
   `p159` (RD 159 barrée), `p34` (RD 34 barrée), `total`, `zones`). En cas de décalage du chantier,
   il suffit de modifier les dates.
 - **Contact de la mairie** : `commune.telephone`, `commune.courriel`.
-- **Textes** des travaux, chiffres clés, signalisation, documents.
+- **Textes** des travaux, chiffres clés, signalisation, périmètre de l'arrêté et corridors de déviation.
 - **Services externes** : `osrmUrl` (calcul du tracé routier ; vider la chaîne pour n'afficher que le
   tracé schématique) et `tuiles` (fond de carte).
 
@@ -74,28 +74,38 @@ Le réseau routier (`assets/js/network.js`) contient les communes (`type: "villa
 autour du carrefour (`type: "junction"`). Chaque tronçon (`edges`) porte :
 
 - `kind` : `rd` (route départementale), `chantier` (branche du carrefour, fermée selon l'état),
-  `traverse` (voie communale limitée en tonnage), `communal` (Chemin du Rey) ;
+  `traverse` (voie communale limitée en tonnage) ;
 - `maxWeight` : tonnage maximal autorisé (les véhicules agricoles en sont exemptés) ;
 - `via` : points de passage `[lat, lon]` pour guider le tracé.
 
+## Repères géographiques utilisés
+
+Les documents du chantier ne comportent pas de coordonnées ; le cahier des charges du 14/09/2026 en fournit
+les seules valeurs sûres, qui structurent le réseau :
+
+- **Voie communale de traverse** = voie OpenStreetMap 97405593, de la RD 34 (0,3314509 E / 43,5286594 N,
+  PR 27+511) à la RD 159 (0,3338698 E / 43,5313496 N, PR 6+319), au sud-est du carrefour, environ 360 m.
+- **Emprises de chantier** (projet d'arrêté) : RD 34 du PR 27+085 au PR 27+375 ; RD 159 du PR 6+257 au PR 6+685.
+- **Carrefour RD 34 / RD 159** : déduit de ces repères à 43,53175 N / 0,33205 E (PR estimés 27+163 sur la
+  RD 34, dont les PR croissent vers le sud, et 6+473 sur la RD 159, dont les PR croissent vers l'ouest depuis
+  Mirande). Les quatre limites de la zone de travaux (`br_n`, `br_s`, `br_w`, `br_e`) en découlent.
+- **Bourgs des villages** : relevés sur la carte de déviation calée sur le carrefour (précision de l'ordre de
+  500 m) ; Mirande et Miélan d'après leurs coordonnées connues. À remplacer par les nœuds de village
+  OpenStreetMap pour plus de précision.
+- **Corridors D1 et D2** : décrits par le projet d'arrêté (article 2) ; le tracé détaillé est fourni par le
+  réseau routier réel (OSRM) au moment du calcul.
+
 ## Points à vérifier par la mairie
 
-Les documents fournis ne contiennent pas de coordonnées géographiques ; certaines positions ont donc
-été estimées et méritent une vérification sur le terrain ou sur le Géoportail :
-
-1. **Coordonnées du carrefour** (`nodes.monclar`, 43,5308 N / 0,3192 E) et des quatre entrées de la
-   zone de travaux (`br_n`, `br_s`, `br_w`, `br_e`).
-2. **Tracé de la voie communale de traverse** (RD 159 PR 6+319 ⇄ RD 34 PR 27+511) : modélisée entre la
-   RD 159 côté mairie / école et la RD 34 environ 200 m au sud du carrefour, conformément au plan de
-   déviation. Ajuster `br_e`, `br_s` et le point `via` du tronçon `traverse` si nécessaire.
-3. **Chemin du Rey** (RD 34 à 1 km au nord ⇄ RD 159 à 2 km à l'ouest) : jonctions `j_34n_rey`,
-   `j_159w_rey` et points `via`. Il est modélisé comme déconseillé aux plus de 9 t.
-4. **Position des bourgs** marqués `approx: true` : il s'agit du centre géométrique de la commune,
-   qui peut s'écarter du village de quelques centaines de mètres. Remplacer par les coordonnées de la
-   mairie pour plus de précision.
-5. **Liaisons départementales** utilisées pour les déviations (Pallanne – Bars, Montesquiou – Estipouy –
-   Mirande, Saint-Martin, …) : le graphe est volontairement simplifié ; le tracé détaillé est fourni par
-   OSRM à partir du réseau OpenStreetMap réel.
+1. Arrêté temporaire signé (numéro, dates) et arrêté communal sur la voie communale : le site présente le
+   projet d'arrêté et la règle des 9 t « sauf véhicules agricoles » telle que communiquée le 14/09/2026.
+2. Sens de circulation de la voie communale pendant les travaux (modélisée en double sens ; sens unique
+   RD 34 → RD 159 en temps normal d'après la cartographie).
+3. Calendrier des fermetures par axe (RD 159 en S38 et S40, RD 34 en S39, fermeture totale S41–S43, par
+   zones S44–S45) : issu des phases du DESC et du planning du 04/09/2026, à confirmer avec l'entreprise.
+4. Réouverture complète après le 20 novembre 2026 : non déduite automatiquement, à confirmer.
+5. Liaisons départementales secondaires du graphe (Pallanne – Bars, Montesquiou – Estipouy – Mirande,
+   Saint-Martin…) : volontairement limitées ; aucune autre voie communale n'est proposée.
 
 ## Sources
 
@@ -103,6 +113,7 @@ Les documents fournis ne contiennent pas de coordonnées géographiques ; certai
 - Planning des travaux mis à jour le 04/09/2026 (CARRERE SAS) ;
 - Plan d'exécution voirie / assainissement indice B du 03/09/2026 (XMGE) ;
 - Plan de déviation par RD et zoom sur l'agglomération de Mirande ;
+- Projet d'arrêté temporaire RD 34 / RD 159 et cahier des charges « Se déplacer pendant les travaux » v1.3 du 14/09/2026 (repères OSM, PR, corridors) ;
 - Limites des communes : © contributeurs OpenStreetMap, via gregoiredavid/france-geojson (ODbL).
 
 ## Licences

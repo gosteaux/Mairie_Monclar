@@ -72,8 +72,17 @@
       if (ctx.relaxChantier) { flags.push('riverain'); penalite = 6; }
       else return { ok: false, raison: 'ferme' };
     }
-    if (e.kind === 'traverse') flags.push('traverse');
-    if (e.kind === 'communal') flags.push('communal');
+    if (e.kind === 'traverse') {
+      flags.push('traverse');
+      // hors fermeture, la voie communale (étroite, sens unique en temps normal) n'est pas un raccourci à conseiller
+      if (!ctx.fermes.length) penalite *= 3;
+    }
+    if (ctx.vehicule && ctx.vehicule.maxWeight > 9 && !ctx.vehicule.agri) {
+      // poids lourds : préférence aux corridors de déviation officiels, réticence sur les liaisons non qualifiées
+      if (e.corridor) penalite *= 0.8;
+      else if (e.kind === 'rd' && e.road === 'RD') penalite *= 1.6;
+    }
+    if (e.corridor) flags.push(e.corridor);
     return { ok: true, penalite: penalite, flags: flags };
   }
 

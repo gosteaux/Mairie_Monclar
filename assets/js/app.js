@@ -81,7 +81,7 @@
     return L.divIcon({ className: '', html: '<div class="marqueur-chantier ' + cls + '" title="Carrefour RD 34 / RD 159">🚧</div>', iconSize: [34, 34], iconAnchor: [17, 17] });
   }
   function initCarte() {
-    map = L.map('map', { scrollWheelZoom: false }).setView([43.531, 0.33], 12);
+    map = L.map('map', { scrollWheelZoom: false }).setView([43.5318, 0.3320], 12);
     // fond de secours : limites des communes, dessinées sous les tuiles (visibles si les tuiles ne se chargent pas)
     if (window.MONCLAR_COMMUNES) {
       map.createPane('fond'); map.getPane('fond').style.zIndex = 150;
@@ -110,11 +110,8 @@
     var tr = NET.edges.filter(function (e) { return e.kind === 'traverse'; })[0];
     var pts = RT.pointsPassage(NET, { edges: [tr], path: [tr.a, tr.b] });
     coucheTraverse = L.polyline(pts, { color: '#ef6c00', weight: 5, dashArray: '8 6', opacity: .9 })
-      .bindPopup('<b>Voie communale de traverse</b><br>Limitée à <b>' + DATA.traverse.limiteTonnes + ' t</b> (sauf véhicules agricoles).<br><small>' + esc(DATA.traverse.description) + '</small>')
+      .bindPopup('<b>Voie communale de traverse</b><br>Limitée à <b>' + DATA.traverse.limiteTonnes + ' t</b> (sauf véhicules agricoles).<br><small>' + esc(DATA.traverse.description) + ' ' + esc(DATA.traverse.sens) + '</small>')
       .addTo(map);
-    var rey = NET.edges.filter(function (e) { return e.kind === 'communal'; })[0];
-    L.polyline(RT.pointsPassage(NET, { edges: [rey], path: [rey.a, rey.b] }), { color: '#ef6c00', weight: 3, dashArray: '4 6', opacity: .7 })
-      .bindPopup('<b>' + esc(rey.road) + '</b><br>Voie communale étroite, déconseillée aux plus de 9 t.').addTo(map);
     coucheFermetures = L.layerGroup().addTo(map);
     marqueurChantier = L.marker([NET.nodes.monclar.lat, NET.nodes.monclar.lon], { icon: iconeChantier('normal'), zIndexOffset: 500 })
       .bindPopup('<b>Carrefour RD 34 / RD 159</b><br>Zone de travaux – sécurisation de la traversée').addTo(map);
@@ -196,10 +193,10 @@
     if (r.etat !== 'normal' && passeChantier && !res.flags.riverain) html += alerte('ok', '✅', 'Votre trajet traverse Monclar par la RD restée ouverte. Roulez au pas dans la zone de chantier et respectez la signalisation.');
     if (res.flags.riverain) html += alerte('danger', '🏠', 'Votre départ ou votre arrivée se situe dans la zone de travaux : l\'accès des riverains est maintenu selon l\'avancement du chantier, rapprochez-vous du chef de chantier ou de la mairie.');
     if (res.flags.traverse) html += alerte('attention', '⚖️', 'Vous empruntez la <b>voie communale de traverse limitée à ' + DATA.traverse.limiteTonnes + ' t</b> (sauf véhicules agricoles) : voie étroite, roulez au pas et laissez le passage aux engins de chantier.');
-    if (res.flags.communal) html += alerte('attention', '↔️', 'Vous empruntez le <b>Chemin du Rey</b> (voie communale étroite) : croisements difficiles, prudence.');
-    if (veh.id === 'pl') html += alerte('info', '🚛', 'Plus de 9 t : la voie communale de traverse vous est interdite ; l\'itinéraire suit les routes départementales de déviation (RD 3, RD 16, RD 1021, RD 943…).');
-    if (veh.id === 'velo') html += alerte('info', '🚲', 'À vélo, le chantier reste infranchissable ; empruntez les voies communales indiquées.');
-    if (r.etat === 'normal' && r.hors === null && r.periode && r.periode.debut >= '2026-11-07') html += alerte('info', 'ℹ️', 'Le carrefour est réouvert avec le nouvel aménagement : vitesse limitée à 30 km/h.');
+    if (veh.id === 'pl') html += alerte('info', '🚛', 'Plus de 9 t : la voie communale de traverse vous est interdite ; l\'itinéraire suit les routes départementales des déviations officielles (D1 par Bassoues et la RD 943, D2 par Saint-Maur, Laas et Tillac).');
+    if (veh.id === 'velo') html += alerte('info', '🚲', 'À vélo, le chantier reste infranchissable ; empruntez la voie communale ou les routes départementales indiquées.');
+    if (r.etat === 'normal' && r.hors === null && r.periode && r.periode.debut >= '2026-11-07') html += alerte('info', 'ℹ️', 'Fin des travaux principaux : la réouverture complète du carrefour doit être confirmée par la mairie ; sur place, suivez la signalisation (30 km/h).');
+    html += alerte('info', '🪧', 'Sur place, suivez la signalisation temporaire et les indications des équipes.');
 
     html += '<ol class="etapes">';
     html += '<li><span class="num dep">D</span><span class="route">' + esc(positionUtilisateur && from === positionUtilisateur.villageId ? 'Votre position (près de ' + nomNoeud(from) + ')' : nomNoeud(from)) + '<small>Départ</small></span><span></span></li>';
@@ -284,9 +281,15 @@
     $('#travaux').innerHTML = DATA.travaux.map(function (t) { return '<div class="carte"><span class="ic" aria-hidden="true">' + t.icon + '</span><div><h3>' + esc(t.titre) + '</h3><p>' + esc(t.texte) + '</p></div></div>'; }).join('');
     $('#acteurs').innerHTML = DATA.acteurs.map(function (a) { return '<li><b>' + esc(a.role) + '</b> : ' + esc(a.nom) + '<br><span class="note">' + esc(a.detail) + '</span></li>'; }).join('');
     $('#signalisation').innerHTML = DATA.signalisation.map(function (s) { return '<tr><td>' + esc(s.position) + '</td><td>' + esc(s.panneau) + '</td></tr>'; }).join('');
-    $('#documents').innerHTML = DATA.documents.map(function (d) { return '<a href="' + esc(d.fichier) + '" target="_blank" rel="noopener">📄 ' + esc(d.titre) + '</a>'; }).join('');
     $('#limite-t').textContent = DATA.traverse.limiteTonnes + ' t';
     $('#traverse-desc').textContent = DATA.traverse.description;
+    $('#traverse-sens').textContent = DATA.traverse.sens;
+    var ar = DATA.arrete;
+    $('#arrete-periode').textContent = ar.periode;
+    $('#arrete-rd34').textContent = ar.rd34;
+    $('#arrete-rd159').textContent = ar.rd159;
+    $('#arrete-exceptions').textContent = ar.exceptions;
+    $('#corridors').innerHTML = ar.corridors.map(function (c) { return '<div class="carte"><h3><span class="badge" style="background:var(--sapin)">' + esc(c.id) + '</span> ' + esc(c.titre) + '</h3><p>' + esc(c.trajet) + '</p></div>'; }).join('');
     var c = DATA.commune, contact = '<b>' + esc(c.adresseMairie) + '</b>';
     if (c.telephone) contact += '<br>Téléphone : ' + esc(c.telephone);
     if (c.courriel) contact += '<br>Courriel : <a href="mailto:' + esc(c.courriel) + '">' + esc(c.courriel) + '</a>';

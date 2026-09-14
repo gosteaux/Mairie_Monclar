@@ -11,7 +11,7 @@ window.MONCLAR_DATA = {
     courriel: ""
   },
   acteurs: [
-    { role: "Maître d'ouvrage", nom: "Mairie de Monclar-sur-Losse", detail: "Au Village – 32300 Monclar-sur-Losse (« Monclar-sur-l'Osse » sur les plans)" },
+    { role: "Maître d'ouvrage", nom: "Mairie de Monclar-sur-Losse", detail: "Au Village – 32300 Monclar-sur-Losse" },
     { role: "Maître d'œuvre", nom: "XMGE", detail: "51 rue Montablon – 32500 Fleurance" },
     { role: "Entreprise de travaux", nom: "CARRERE SAS", detail: "391 route de Gimont – 32120 Mauvezin" },
     { role: "Géomètres", nom: "SELARL de Géomètres Experts Associés", detail: "Toulouse · Auch · Condom · Fleurance · Vic-Fezensac" }
@@ -20,7 +20,20 @@ window.MONCLAR_DATA = {
      à la RD 34 (PR 27+511, hors agglomération). */
   traverse: {
     limiteTonnes: 9,
-    description: "Voie communale reliant la RD 159 (PR 6+319, côté gauche, en agglomération) à la RD 34 (PR 27+511, côté gauche, hors agglomération). Circulation limitée à 9 tonnes, sauf véhicules agricoles."
+    description: "Voie communale reliant la RD 159 (PR 6+319, côté gauche, en agglomération) à la RD 34 (PR 27+511, côté gauche, hors agglomération), au sud-est du carrefour. Longueur environ 360 m. Circulation limitée à 9 tonnes, sauf véhicules agricoles.",
+    sens: "Ouverte dans les deux sens pendant les travaux (en temps normal : sens unique de la RD 34 vers la RD 159)."
+  },
+  /* Périmètre du projet d'arrêté temporaire (14 septembre – 20 novembre 2026, jour et nuit, week-ends compris) */
+  arrete: {
+    periode: "du 14 septembre au 20 novembre 2026 inclus, jour et nuit, week-ends compris",
+    rd34: "RD 34 du PR 21+647 (carrefour RD 943 / RD 34 à Montesquiou) au PR 34+373 (carrefour RD 16 / RD 34 à Laas)",
+    rd159: "RD 159 du PR 0+630 (Mirande) au PR 12+659 (carrefour RD 156 / RD 159 à Saint-Christaud)",
+    emprises: "zone de chantier : RD 34 du PR 27+085 au PR 27+375 et RD 159 du PR 6+257 au PR 6+685",
+    exceptions: "véhicules du chantier, secours, gendarmerie, transports scolaires, collecte des ordures ménagères et riverains habitant l'agglomération de Monclar-sur-Losse",
+    corridors: [
+      { id: "D1", titre: "Montesquiou ⇄ Laas (trafic de la RD 34)", trajet: "RD 943 depuis le carrefour RD 943 / RD 34 à Montesquiou, traversée de Bassoues, jusqu'au carrefour RD 943 / RD 159 (secteur Saint-Christaud – Laveraët) ; RD 159 jusqu'au carrefour RD 159 / RD 156 à Saint-Christaud ; RD 156 jusqu'au carrefour RD 16 / RD 156 à Laas (lieu-dit Chez Monil)." },
+      { id: "D2", titre: "Mirande ⇄ Marciac (trafic de la RD 159)", trajet: "Depuis le giratoire de la RD 159 à Mirande : boulevard des Pyrénées, boulevard de l'Ancienne Voie Ferrée, rue de l'Industrie, giratoire de la RD 1021 ; RD 1021 jusqu'à Laas ; RD 16 par Tillac ; RD 3 en direction de Marciac." }
+    ]
   },
   vehicules: [
     { id: "vl",   label: "Voiture, moto, utilitaire léger", detail: "≤ 3,5 t", icon: "🚗", maxWeight: 3.5, agri: false },
@@ -58,9 +71,12 @@ window.MONCLAR_DATA = {
     { debut: "2026-10-26", fin: "2026-11-06", etat: "zones", semaine: "S44 – S45",
       titre: "Chaussée, enduits bicouches et signalisation verticale",
       detail: "Préparation de la chaussée (26–30/10), réalisation des enduits bicouches (02/11), pose de la signalisation verticale (03–05/11). Fermetures par zones de travail sur les deux RD : la traversée reste déconseillée, suivez la déviation." },
-    { debut: "2026-11-07", fin: "2026-11-22", etat: "normal", semaine: "S46 – S47",
-      titre: "Réouverture du carrefour aménagé",
-      detail: "Fin des travaux principaux : circulation rétablie sur le nouvel aménagement (vitesse limitée à 30 km/h dans la traversée). Marquage au sol provisoire." },
+    { debut: "2026-11-07", fin: "2026-11-20", etat: "normal", semaine: "S46 – S47",
+      titre: "Fin des travaux principaux, arrêté toujours en vigueur",
+      detail: "Circulation rétablie sur le nouvel aménagement selon la signalisation en place (vitesse limitée à 30 km/h). Le projet d'arrêté court jusqu'au 20 novembre inclus : la réouverture complète doit être confirmée par la mairie." },
+    { debut: "2026-11-21", fin: "2026-11-22", etat: "normal", semaine: "S47",
+      titre: "Fin de la période de l'arrêté temporaire",
+      detail: "Réouverture à confirmer sur place ; marquage au sol provisoire." },
     { debut: "2026-11-23", fin: "2026-11-27", etat: "normal", semaine: "S48",
       titre: "Signalisation horizontale (marquage au sol)",
       detail: "Réalisation du marquage définitif : circulation possible avec gêne ponctuelle (alternat)." }
@@ -79,19 +95,15 @@ window.MONCLAR_DATA = {
     { valeur: "24 août → fin nov. 2026", legende: "durée prévisionnelle du chantier" },
     { valeur: "5 semaines", legende: "de fermeture du carrefour (5 oct. → 6 nov.)" },
     { valeur: "500 ml", legende: "de bordures posées" },
-    { valeur: "9 t", legende: "limite sur la voie communale de traverse" },
+    { valeur: "9 t", legende: "limite sur la voie communale de traverse (sauf agricoles)" },
     { valeur: "30 km/h", legende: "vitesse dans la traversée aménagée" }
   ],
   signalisation: [
-    { position: "RD 159 à 2 km à l'ouest (Chemin du Rey / Domaine de Menjelon)", panneau: "KC1 « Route barrée à 2 km »" },
-    { position: "RD 34 à 1 km au nord (Chemin du Rey)", panneau: "KC1 « Route barrée à 1 km »" },
-    { position: "RD 34 à 500 m au sud (Chemin de Bigouroux)", panneau: "KC1 « Route barrée à 500 m »" },
+    { position: "RD 159 à 2 km à l'ouest du village", panneau: "KC1 « Route barrée à 2 km »" },
+    { position: "RD 34 à 1 km au nord du village", panneau: "KC1 « Route barrée à 1 km »" },
+    { position: "RD 34 à 500 m au sud du village", panneau: "KC1 « Route barrée à 500 m »" },
     { position: "RD 159 à 2 km à l'est (route de Mirande)", panneau: "KC1 « Route barrée à 2 km »" },
     { position: "Aux 4 entrées de la zone de travaux", panneau: "K8 + B0 + KC1 « Route barrée » + AK14 tri-flash" }
-  ],
-  documents: [
-    { titre: "Planning des travaux (CARRERE SAS, mis à jour le 04/09/2026)", fichier: "docs/planning-travaux-2026-09-04.pdf" },
-    { titre: "Plan d'exécution voirie / assainissement – indice B du 03/09/2026 (XMGE)", fichier: "docs/plan-execution-indice-B.pdf" }
   ],
   /* Service de calcul d'itinéraire routier (géométrie des routes). Laisser vide pour désactiver
      et n'afficher qu'un tracé schématique. */

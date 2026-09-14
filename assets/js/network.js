@@ -1,151 +1,78 @@
 /* Réseau routier simplifié autour de Monclar-sur-Losse.
-   Généré depuis les centroïdes des communes du Gers (données © contributeurs OpenStreetMap / gregoiredavid/france-geojson),
-   avec des positions de bourg corrigées manuellement et des jonctions relevées sur le plan de déviation (DESC CARRERE SAS).
-   Les nœuds marqués approx:true sont des centroïdes de commune (à affiner si besoin). Voir README.md. */
+   Repères sûrs : voie communale = voie OpenStreetMap 97405593 (RD 34 [0.3314509, 43.5286594] -> RD 159 [0.3338698, 43.5313496]) ;
+   emprises de chantier RD 34 PR 27+085 -> 27+375 et RD 159 PR 6+257 -> 6+685 (projet d'arrêté) ; corridors D1 et D2.
+   Le carrefour et les limites d'emprise en sont déduits ; les bourgs sont relevés sur la carte de déviation (précision ~500 m).
+   Les tracés détaillés sont fournis par le réseau routier réel (OSRM) au moment du calcul. Voir README.md. */
 window.MONCLAR_NETWORK = {
  "nodes": {
   "monclar": {
-   "name": "Monclar-sur-Losse (centre-bourg)",
-   "lat": 43.5308,
-   "lon": 0.3192,
+   "name": "Monclar-sur-Losse (carrefour RD 34 / RD 159)",
+   "lat": 43.53175,
+   "lon": 0.33205,
    "type": "village",
-   "insee": "32265",
+   "approx": false
+  },
+  "bars": {
+   "name": "Bars",
+   "lat": 43.51251,
+   "lon": 0.29427,
+   "type": "village",
    "approx": false
   },
   "pouylebon": {
    "name": "Pouylebon",
-   "lat": 43.5447,
-   "lon": 0.3028,
+   "lat": 43.54857,
+   "lon": 0.29379,
    "type": "village",
-   "insee": "32326",
    "approx": false
   },
-  "montesquiou": {
-   "name": "Montesquiou",
-   "lat": 43.5781,
-   "lon": 0.3186,
+  "saint_christaud": {
+   "name": "Saint-Christaud",
+   "lat": 43.5295,
+   "lon": 0.26151,
    "type": "village",
-   "insee": "32285",
-   "approx": false
-  },
-  "bassoues": {
-   "name": "Bassoues",
-   "lat": 43.5781,
-   "lon": 0.2497,
-   "type": "village",
-   "insee": "32032",
-   "approx": false
-  },
-  "mascaras": {
-   "name": "Mascaras",
-   "lat": 43.55173,
-   "lon": 0.22367,
-   "type": "village",
-   "insee": "32240",
-   "approx": true
-  },
-  "scieurac": {
-   "name": "Scieurac-et-Flourès",
-   "lat": 43.55698,
-   "lon": 0.19871,
-   "type": "village",
-   "insee": "32422",
-   "approx": true
-  },
-  "armous": {
-   "name": "Armous-et-Cau",
-   "lat": 43.57273,
-   "lon": 0.18667,
-   "type": "village",
-   "insee": "32009",
-   "approx": true
-  },
-  "bars": {
-   "name": "Bars",
-   "lat": 43.5119,
-   "lon": 0.305,
-   "type": "village",
-   "insee": "32030",
    "approx": false
   },
   "marseillan": {
    "name": "Marseillan",
-   "lat": 43.48832,
-   "lon": 0.31196,
+   "lat": 43.48754,
+   "lon": 0.31531,
    "type": "village",
-   "insee": "32238",
-   "approx": true
-  },
-  "laas": {
-   "name": "Laas",
-   "lat": 43.47164,
-   "lon": 0.301,
-   "type": "village",
-   "insee": "32167",
-   "approx": true
-  },
-  "saint_maur": {
-   "name": "Saint-Maur",
-   "lat": 43.4825,
-   "lon": 0.3522,
-   "type": "village",
-   "insee": "32393",
    "approx": false
   },
-  "tillac": {
-   "name": "Tillac",
-   "lat": 43.4861,
-   "lon": 0.2694,
+  "saint_martin": {
+   "name": "Saint-Martin",
+   "lat": 43.50661,
+   "lon": 0.37509,
    "type": "village",
-   "insee": "32446",
    "approx": false
   },
   "pallanne": {
    "name": "Pallanne",
-   "lat": 43.5038,
-   "lon": 0.26598,
+   "lat": 43.50748,
+   "lon": 0.25481,
    "type": "village",
-   "insee": "32303",
-   "approx": true
-  },
-  "saint_christaud": {
-   "name": "Saint-Christaud",
-   "lat": 43.5261,
-   "lon": 0.2615,
-   "type": "village",
-   "insee": "32367",
    "approx": false
   },
-  "laveraet": {
-   "name": "Laveraët",
-   "lat": 43.52661,
-   "lon": 0.2136,
+  "estipouy": {
+   "name": "Estipouy",
+   "lat": 43.5503,
+   "lon": 0.37988,
    "type": "village",
-   "insee": "32205",
-   "approx": true
+   "approx": false
+  },
+  "mascaras": {
+   "name": "Mascaras",
+   "lat": 43.55637,
+   "lon": 0.22635,
+   "type": "village",
+   "approx": false
   },
   "monlezun": {
    "name": "Monlezun",
-   "lat": 43.49562,
-   "lon": 0.21675,
+   "lat": 43.50002,
+   "lon": 0.21033,
    "type": "village",
-   "insee": "32273",
-   "approx": true
-  },
-  "marciac": {
-   "name": "Marciac",
-   "lat": 43.5247,
-   "lon": 0.1606,
-   "type": "village",
-   "insee": "32233",
-   "approx": false
-  },
-  "mielan": {
-   "name": "Miélan",
-   "lat": 43.4314,
-   "lon": 0.3061,
-   "type": "village",
-   "insee": "32252",
    "approx": false
   },
   "mirande": {
@@ -153,145 +80,140 @@ window.MONCLAR_NETWORK = {
    "lat": 43.515,
    "lon": 0.4047,
    "type": "village",
-   "insee": "32256",
    "approx": false
   },
-  "saint_martin": {
-   "name": "Saint-Martin",
-   "lat": 43.50771,
-   "lon": 0.37445,
+  "montesquiou": {
+   "name": "Montesquiou",
+   "lat": 43.57977,
+   "lon": 0.32607,
    "type": "village",
-   "insee": "32389",
-   "approx": true
+   "approx": false
   },
-  "estipouy": {
-   "name": "Estipouy",
-   "lat": 43.54876,
-   "lon": 0.38764,
+  "laas": {
+   "name": "Laas",
+   "lat": 43.46916,
+   "lon": 0.30909,
    "type": "village",
-   "insee": "32128",
-   "approx": true
+   "approx": false
+  },
+  "bassoues": {
+   "name": "Bassoues",
+   "lat": 43.57995,
+   "lon": 0.24357,
+   "type": "village",
+   "approx": false
+  },
+  "tillac": {
+   "name": "Tillac",
+   "lat": 43.47402,
+   "lon": 0.27418,
+   "type": "village",
+   "approx": false
+  },
+  "laveraet": {
+   "name": "Laveraët",
+   "lat": 43.53071,
+   "lon": 0.20961,
+   "type": "village",
+   "approx": false
+  },
+  "marciac": {
+   "name": "Marciac",
+   "lat": 43.52516,
+   "lon": 0.15701,
+   "type": "village",
+   "approx": false
+  },
+  "saint_maur": {
+   "name": "Saint-Maur",
+   "lat": 43.47714,
+   "lon": 0.34209,
+   "type": "village",
+   "approx": false
+  },
+  "scieurac": {
+   "name": "Scieurac-et-Flourès",
+   "lat": 43.56018,
+   "lon": 0.20316,
+   "type": "village",
+   "approx": false
+  },
+  "armous": {
+   "name": "Armous-et-Cau",
+   "lat": 43.57579,
+   "lon": 0.18881,
+   "type": "village",
+   "approx": false
   },
   "mouches": {
    "name": "Mouchès",
-   "lat": 43.55774,
-   "lon": 0.42141,
+   "lat": 43.55602,
+   "lon": 0.41694,
    "type": "village",
-   "insee": "32293",
-   "approx": true
-  },
-  "isle_de_noe": {
-   "name": "L'Isle-de-Noé",
-   "lat": 43.58495,
-   "lon": 0.41465,
-   "type": "village",
-   "insee": "32159",
-   "approx": true
-  },
-  "idrac": {
-   "name": "Idrac-Respaillès",
-   "lat": 43.51474,
-   "lon": 0.46445,
-   "type": "village",
-   "insee": "32156",
-   "approx": true
+   "approx": false
   },
   "berdoues": {
    "name": "Berdoues",
-   "lat": 43.47184,
-   "lon": 0.39983,
+   "lat": 43.4813,
+   "lon": 0.40618,
    "type": "village",
-   "insee": "32045",
-   "approx": true
+   "approx": false
   },
   "ponsampere": {
    "name": "Ponsampère",
-   "lat": 43.45872,
-   "lon": 0.37054,
+   "lat": 43.45512,
+   "lon": 0.37701,
    "type": "village",
-   "insee": "32323",
-   "approx": true
+   "approx": false
   },
-  "belloc": {
-   "name": "Belloc-Saint-Clamens",
-   "lat": 43.45698,
-   "lon": 0.4374,
+  "isle_de_noe": {
+   "name": "L'Isle-de-Noé",
+   "lat": 43.58619,
+   "lon": 0.41335,
    "type": "village",
-   "insee": "32042",
-   "approx": true
+   "approx": false
   },
-  "saint_medard": {
-   "name": "Saint-Médard",
-   "lat": 43.48423,
-   "lon": 0.46219,
+  "mielan": {
+   "name": "Miélan",
+   "lat": 43.4314,
+   "lon": 0.3061,
    "type": "village",
-   "insee": "32394",
-   "approx": true
-  },
-  "lamazere": {
-   "name": "Lamazère",
-   "lat": 43.56134,
-   "lon": 0.45209,
-   "type": "village",
-   "insee": "32187",
-   "approx": true
-  },
-  "sadeillan": {
-   "name": "Sadeillan",
-   "lat": 43.39615,
-   "lon": 0.34323,
-   "type": "village",
-   "insee": "32355",
-   "approx": true
-  },
-  "auch": {
-   "name": "Auch",
-   "lat": 43.6465,
-   "lon": 0.5855,
-   "type": "village",
-   "insee": "32013",
    "approx": false
   },
   "br_n": {
    "name": "l'entrée nord du chantier (RD 34)",
-   "lat": 43.53307,
-   "lon": 0.31941,
+   "lat": 43.53244,
+   "lon": 0.33218,
    "type": "junction"
   },
   "br_s": {
-   "name": "l'entrée sud du chantier (RD 34), départ de la voie communale",
-   "lat": 43.52897,
-   "lon": 0.31954,
+   "name": "la sortie sud du chantier (RD 34)",
+   "lat": 43.52986,
+   "lon": 0.33168,
    "type": "junction"
   },
   "br_w": {
    "name": "l'entrée ouest du chantier (RD 159)",
-   "lat": 43.53083,
-   "lon": 0.31577,
+   "lat": 43.53185,
+   "lon": 0.32943,
    "type": "junction"
   },
   "br_e": {
-   "name": "la mairie / école (RD 159), départ de la voie communale",
-   "lat": 43.53027,
-   "lon": 0.3222,
+   "name": "le raccordement de la voie communale sur la RD 159 (côté est)",
+   "lat": 43.53135,
+   "lon": 0.33387,
    "type": "junction"
   },
-  "j_34n_rey": {
-   "name": "le carrefour RD 34 / Chemin du Rey (1 km au nord)",
-   "lat": 43.5368,
-   "lon": 0.32036,
+  "j_vc1_34": {
+   "name": "le raccordement de la voie communale sur la RD 34 (côté sud)",
+   "lat": 43.52866,
+   "lon": 0.33145,
    "type": "junction"
   },
-  "j_159w_rey": {
-   "name": "le carrefour RD 159 / Chemin du Rey (2 km à l'ouest)",
-   "lat": 43.53493,
-   "lon": 0.29584,
-   "type": "junction"
-  },
-  "j_34s_big": {
-   "name": "le carrefour RD 34 / Chemin de Bigouroux (500 m au sud)",
-   "lat": 43.52545,
-   "lon": 0.31791,
+  "j_943_159": {
+   "name": "le carrefour RD 943 / RD 159 (entre Saint-Christaud et Laveraët)",
+   "lat": 43.53002,
+   "lon": 0.23568,
    "type": "junction"
   }
  },
@@ -326,31 +248,14 @@ window.MONCLAR_NETWORK = {
   },
   {
    "a": "br_e",
-   "b": "br_s",
-   "road": "Voie communale (traverse du village)",
+   "b": "j_vc1_34",
+   "road": "Voie communale de traverse (RD 159 ⇄ RD 34)",
    "kind": "traverse",
    "maxWeight": 9,
    "via": [
     [
-     43.52956,
-     0.32079
-    ]
-   ]
-  },
-  {
-   "a": "j_34n_rey",
-   "b": "j_159w_rey",
-   "road": "Chemin du Rey (voie communale)",
-   "kind": "communal",
-   "maxWeight": 9,
-   "via": [
-    [
-     43.53789,
-     0.31127
-    ],
-    [
-     43.53664,
-     0.30055
+     43.53,
+     0.33266
     ]
    ]
   },
@@ -362,24 +267,18 @@ window.MONCLAR_NETWORK = {
   },
   {
    "a": "pouylebon",
-   "b": "j_34n_rey",
-   "road": "RD 34",
-   "kind": "rd"
-  },
-  {
-   "a": "j_34n_rey",
    "b": "br_n",
    "road": "RD 34",
    "kind": "rd"
   },
   {
    "a": "br_s",
-   "b": "j_34s_big",
+   "b": "j_vc1_34",
    "road": "RD 34",
    "kind": "rd"
   },
   {
-   "a": "j_34s_big",
+   "a": "j_vc1_34",
    "b": "bars",
    "road": "RD 34",
    "kind": "rd"
@@ -392,14 +291,8 @@ window.MONCLAR_NETWORK = {
   },
   {
    "a": "marseillan",
-   "b": "saint_maur",
-   "road": "RD 34",
-   "kind": "rd"
-  },
-  {
-   "a": "marseillan",
    "b": "laas",
-   "road": "RD",
+   "road": "RD 34",
    "kind": "rd"
   },
   {
@@ -410,18 +303,18 @@ window.MONCLAR_NETWORK = {
   },
   {
    "a": "br_w",
-   "b": "j_159w_rey",
-   "road": "RD 159",
-   "kind": "rd"
-  },
-  {
-   "a": "j_159w_rey",
    "b": "saint_christaud",
    "road": "RD 159",
    "kind": "rd"
   },
   {
    "a": "saint_christaud",
+   "b": "j_943_159",
+   "road": "RD 159",
+   "kind": "rd"
+  },
+  {
+   "a": "j_943_159",
    "b": "laveraet",
    "road": "RD 159",
    "kind": "rd"
@@ -433,45 +326,71 @@ window.MONCLAR_NETWORK = {
    "kind": "rd"
   },
   {
-   "a": "marciac",
-   "b": "monlezun",
-   "road": "RD 3",
-   "kind": "rd"
+   "a": "montesquiou",
+   "b": "bassoues",
+   "road": "RD 943",
+   "kind": "rd",
+   "corridor": "D1"
   },
   {
-   "a": "monlezun",
-   "b": "tillac",
-   "road": "RD 3",
-   "kind": "rd"
+   "a": "bassoues",
+   "b": "j_943_159",
+   "road": "RD 943",
+   "kind": "rd",
+   "corridor": "D1"
   },
   {
-   "a": "tillac",
-   "b": "mielan",
-   "road": "RD 3",
-   "kind": "rd"
-  },
-  {
-   "a": "tillac",
+   "a": "saint_christaud",
    "b": "laas",
-   "road": "RD 16",
-   "kind": "rd"
+   "road": "RD 156",
+   "kind": "rd",
+   "corridor": "D1"
+  },
+  {
+   "a": "mirande",
+   "b": "saint_maur",
+   "road": "RD 1021",
+   "kind": "rd",
+   "corridor": "D2"
+  },
+  {
+   "a": "saint_maur",
+   "b": "laas",
+   "road": "RD 1021 / RD 16",
+   "kind": "rd",
+   "corridor": "D2"
   },
   {
    "a": "laas",
-   "b": "saint_maur",
+   "b": "tillac",
    "road": "RD 16",
-   "kind": "rd"
+   "kind": "rd",
+   "corridor": "D2"
   },
   {
-   "a": "saint_maur",
-   "b": "mirande",
-   "road": "RD 1021",
-   "kind": "rd"
+   "a": "tillac",
+   "b": "monlezun",
+   "road": "RD 3",
+   "kind": "rd",
+   "corridor": "D2"
+  },
+  {
+   "a": "monlezun",
+   "b": "marciac",
+   "road": "RD 3",
+   "kind": "rd",
+   "corridor": "D2"
   },
   {
    "a": "saint_maur",
    "b": "mielan",
    "road": "RD 1021",
+   "kind": "rd"
+  },
+  {
+   "a": "tillac",
+   "b": "mielan",
+   "road": "RD 3",
    "kind": "rd"
   },
   {
@@ -507,12 +426,6 @@ window.MONCLAR_NETWORK = {
   {
    "a": "monlezun",
    "b": "laveraet",
-   "road": "RD",
-   "kind": "rd"
-  },
-  {
-   "a": "mielan",
-   "b": "sadeillan",
    "road": "RD",
    "kind": "rd"
   },
@@ -544,30 +457,6 @@ window.MONCLAR_NETWORK = {
    "a": "mouches",
    "b": "mirande",
    "road": "RD",
-   "kind": "rd"
-  },
-  {
-   "a": "isle_de_noe",
-   "b": "auch",
-   "road": "RD 943",
-   "kind": "rd"
-  },
-  {
-   "a": "mirande",
-   "b": "lamazere",
-   "road": "RN 21",
-   "kind": "rd"
-  },
-  {
-   "a": "lamazere",
-   "b": "auch",
-   "road": "RN 21",
-   "kind": "rd"
-  },
-  {
-   "a": "montesquiou",
-   "b": "bassoues",
-   "road": "RD 943",
    "kind": "rd"
   },
   {
@@ -619,24 +508,6 @@ window.MONCLAR_NETWORK = {
    "kind": "rd"
   },
   {
-   "a": "mirande",
-   "b": "idrac",
-   "road": "RD",
-   "kind": "rd"
-  },
-  {
-   "a": "mirande",
-   "b": "belloc",
-   "road": "RD",
-   "kind": "rd"
-  },
-  {
-   "a": "mirande",
-   "b": "saint_medard",
-   "road": "RD",
-   "kind": "rd"
-  },
-  {
    "a": "berdoues",
    "b": "ponsampere",
    "road": "RD",
@@ -645,12 +516,6 @@ window.MONCLAR_NETWORK = {
   {
    "a": "ponsampere",
    "b": "saint_maur",
-   "road": "RD",
-   "kind": "rd"
-  },
-  {
-   "a": "belloc",
-   "b": "berdoues",
    "road": "RD",
    "kind": "rd"
   }

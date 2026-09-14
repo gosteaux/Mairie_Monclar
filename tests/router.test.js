@@ -34,29 +34,33 @@ check('normal St-Christaud->Mirande passe par Monclar', passe(r, 'monclar'), des
 
 // fermeture totale
 r = RT.calculer(NET, DATA, { from: 'mirande', to: 'bars', etat: 'total', vehicule: veh('vl') });
-check('total VL Mirande->Bars évite Monclar et utilise la traverse', !passe(r, 'monclar') && utilise(r, 'traverse'), desc(r));
+check('total VL Mirande->Bars évite le carrefour et utilise la voie communale', !passe(r, 'monclar') && utilise(r, 'traverse'), desc(r));
+r = RT.calculer(NET, DATA, { from: 'bars', to: 'mirande', etat: 'total', vehicule: veh('pl9') });
+check('total 3,5-9 t Bars->Mirande par la voie communale', utilise(r, 'traverse'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'mirande', to: 'bars', etat: 'total', vehicule: veh('pl') });
-check('total PL Mirande->Bars sans traverse ni Chemin du Rey, via Saint-Maur', r.ok && !utilise(r, 'traverse') && !utilise(r, 'communal') && passe(r, 'saint_maur'), desc(r));
+check('total PL Mirande->Bars sans voie communale, par la déviation D2 (Saint-Maur, Laas)', r.ok && !utilise(r, 'traverse') && passe(r, 'saint_maur') && passe(r, 'laas'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'mirande', to: 'bars', etat: 'total', vehicule: veh('agri') });
-check('total tracteur Mirande->Bars autorisé sur la traverse', utilise(r, 'traverse'), desc(r));
+check('total tracteur Mirande->Bars autorisé sur la voie communale', utilise(r, 'traverse'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'pouylebon', to: 'saint_christaud', etat: 'total', vehicule: veh('vl') });
-check('total VL Pouylebon->St-Christaud par le Chemin du Rey', utilise(r, 'communal') && !passe(r, 'monclar'), desc(r));
-r = RT.calculer(NET, DATA, { from: 'pouylebon', to: 'saint_christaud', etat: 'total', vehicule: veh('pl') });
-check('total PL Pouylebon->St-Christaud sans voie communale', r.ok && !utilise(r, 'communal') && !passe(r, 'monclar'), desc(r));
+check('total VL Pouylebon->St-Christaud évite le carrefour', r.ok && !passe(r, 'monclar'), desc(r));
+r = RT.calculer(NET, DATA, { from: 'montesquiou', to: 'laas', etat: 'total', vehicule: veh('pl') });
+check('total PL Montesquiou->Laas suit la déviation D1 (Bassoues, RD 943, Saint-Christaud, RD 156)', r.ok && passe(r, 'bassoues') && passe(r, 'saint_christaud') && !passe(r, 'monclar'), desc(r));
+r = RT.calculer(NET, DATA, { from: 'marciac', to: 'mirande', etat: 'total', vehicule: veh('pl') });
+check('total PL Marciac->Mirande suit la déviation D2 (Tillac, Laas, Saint-Maur)', r.ok && passe(r, 'tillac') && passe(r, 'laas') && passe(r, 'saint_maur'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'pouylebon', to: 'bars', etat: 'total', vehicule: veh('vl') });
-check('total VL Pouylebon->Bars évite Monclar', r.ok && !passe(r, 'monclar'), desc(r));
+check('total VL Pouylebon->Bars évite le carrefour', r.ok && !passe(r, 'monclar'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'saint_christaud', to: 'bars', etat: 'total', vehicule: veh('vl') });
 check('total VL St-Christaud->Bars via Pallanne', r.ok && !passe(r, 'monclar') && passe(r, 'pallanne'), desc(r));
 
 // fermetures partielles
 r = RT.calculer(NET, DATA, { from: 'pouylebon', to: 'bars', etat: 'p159', vehicule: veh('vl') });
-check('RD159 barrée : Pouylebon->Bars passe par Monclar (RD34 ouverte)', passe(r, 'monclar'), desc(r));
+check('RD159 barrée : Pouylebon->Bars passe par le carrefour (RD34 ouverte)', passe(r, 'monclar'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'saint_christaud', to: 'mirande', etat: 'p159', vehicule: veh('vl') });
 check('RD159 barrée : St-Christaud->Mirande évite le carrefour', r.ok && !passe(r, 'monclar'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'saint_christaud', to: 'mirande', etat: 'p34', vehicule: veh('vl') });
-check('RD34 barrée : St-Christaud->Mirande passe par Monclar', passe(r, 'monclar'), desc(r));
+check('RD34 barrée : St-Christaud->Mirande passe par le carrefour', passe(r, 'monclar'), desc(r));
 r = RT.calculer(NET, DATA, { from: 'pouylebon', to: 'bars', etat: 'p34', vehicule: veh('pl') });
-check('RD34 barrée : PL Pouylebon->Bars évite le carrefour', r.ok && !passe(r, 'monclar') && !utilise(r, 'communal'), desc(r));
+check('RD34 barrée : PL Pouylebon->Bars évite le carrefour', r.ok && !passe(r, 'monclar') && !utilise(r, 'traverse'), desc(r));
 
 // riverains
 r = RT.calculer(NET, DATA, { from: 'monclar', to: 'mirande', etat: 'total', vehicule: veh('vl'), relaxChantier: true });
@@ -65,9 +69,11 @@ r = RT.calculer(NET, DATA, { from: 'monclar', to: 'mirande', etat: 'total', vehi
 check('total Monclar->Mirande sans relax : aucun itinéraire', !r.ok);
 
 // utilitaires
-const v = RT.villagePlusProche(NET, 43.512, 0.306);
-check('village le plus proche de (43.512, 0.306) = Bars', v.id === 'bars', v.id);
+const v = RT.villagePlusProche(NET, 43.512, 0.296);
+check('village le plus proche de (43.512, 0.296) = Bars', v.id === 'bars', v.id);
 check('étapes regroupées', RT.etapes(NET, RT.calculer(NET, DATA, { from: 'marciac', to: 'mirande', etat: 'total', vehicule: veh('pl') })).length >= 3);
+r = RT.calculer(NET, DATA, { from: 'mirande', to: 'bars', etat: 'normal', vehicule: veh('vl') });
+check('normal Mirande->Bars passe par le carrefour (pas par la voie communale)', passe(r, 'monclar') && !utilise(r, 'traverse'), desc(r));
 // cohérence du réseau
 let orphelins = Object.keys(NET.nodes).filter(id => !NET.adj[id].length);
 check('aucun nœud isolé', orphelins.length === 0, orphelins.join(','));
