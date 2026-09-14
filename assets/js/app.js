@@ -82,7 +82,18 @@
   }
   function initCarte() {
     map = L.map('map', { scrollWheelZoom: false }).setView([43.531, 0.33], 12);
-    L.tileLayer(DATA.tuiles.url, { attribution: DATA.tuiles.attribution, maxZoom: 19 }).addTo(map);
+    // fond de secours : limites des communes, dessinées sous les tuiles (visibles si les tuiles ne se chargent pas)
+    if (window.MONCLAR_COMMUNES) {
+      map.createPane('fond'); map.getPane('fond').style.zIndex = 150;
+      var fondRenderer = L.svg({ pane: 'fond' });
+      L.geoJSON(window.MONCLAR_COMMUNES, { renderer: fondRenderer, interactive: false,
+        style: function () { return { color: '#9fb3a6', weight: 1, fillColor: '#eef3ea', fillOpacity: 1 }; } }).addTo(map);
+    }
+    var tuiles = L.tileLayer(DATA.tuiles.url, { attribution: DATA.tuiles.attribution, maxZoom: 19 }).addTo(map);
+    var erreursTuiles = 0;
+    tuiles.on('tileerror', function () {
+      if (++erreursTuiles === 4) map.attributionControl.setPrefix('Fond détaillé indisponible : limites des communes affichées · <a href="https://leafletjs.com">Leaflet</a>');
+    });
     map.on('click focus', function () { map.scrollWheelZoom.enable(); });
     map.on('mouseout', function () { map.scrollWheelZoom.disable(); });
 
