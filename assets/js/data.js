@@ -105,9 +105,23 @@ window.MONCLAR_DATA = {
     { position: "RD 159 à 2 km à l'est (route de Mirande)", panneau: "KC1 « Route barrée à 2 km »" },
     { position: "Aux 4 entrées de la zone de travaux", panneau: "K8 + B0 + KC1 « Route barrée » + AK14 tri-flash" }
   ],
-  /* Service de calcul d'itinéraire routier (géométrie des routes). Laisser vide pour désactiver
-     et n'afficher qu'un tracé schématique. */
-  osrmUrl: "https://router.project-osrm.org/route/v1/driving/",
+  /* Service de calcul d'itinéraire sur le réseau routier réel (Valhalla, instance publique FOSSGIS,
+     la même que le site openstreetmap.org). Laisser vide pour n'afficher qu'un tracé schématique. */
+  valhallaUrl: "https://valhalla1.openstreetmap.de/route",
+  /* Zone de chantier : polygones d'exclusion construits autour du carrefour, par branche.
+     cap = orientation de la branche en degrés (0 = nord), de / a = distances au carrefour en mètres. */
+  zoneChantier: {
+    centre: [43.53175, 0.33205],
+    largeur: 40,
+    branches: [
+      { axe: "34", nom: "RD 34 côté nord", cap: 8, de: 25, a: 90 },
+      { axe: "34", nom: "RD 34 côté sud", cap: 188, de: 25, a: 200 },
+      { axe: "159", nom: "RD 159 côté ouest", cap: 273, de: 25, a: 200 },
+      { axe: "159", nom: "RD 159 côté est (jusqu'à la voie communale)", cap: 107, de: 25, a: 120 }
+    ],
+    /* voie communale de traverse (voie OSM 97405593) : exclue pour les plus de 9 t */
+    voieCommunale: { a: [43.5286594, 0.3314509], b: [43.5313496, 0.3338698], largeur: 30, retrait: 25 }
+  },
   tuiles: {
     url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: "© <a href=\"https://www.openstreetmap.org/copyright\">contributeurs OpenStreetMap</a>"

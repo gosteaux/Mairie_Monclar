@@ -157,6 +157,91 @@
   });
 
   /* ---------- calcul et affichage ---------- */
+  /* ---------- géométrie utilitaire ---------- */
+  var M_LAT = 1 / 111320, M_LON = 1 / (111320 * Math.cos(43.53 * Math.PI / 180));
+  function deplacer(p, estM, nordM) { return [p[0] + nordM * M_LAT, p[1] + estM * M_LON]; }
+  function polaire(p, dist, capDeg) { var b = capDeg * Math.PI / 180; return deplacer(p, dist * Math.sin(b), dist * Math.cos(b)); }
+  /* rectangle [lon,lat] le long d'un axe défini par un point, un cap et deux distances */
+  function rectangleAxe(origine, cap, de, a, largeur) {
+    var p1 = polaire(origine, de, cap), p2 = polaire(origine, a, cap), perp = cap + 90, l = largeur / 2;
+    return [polaire(p1, l, perp), polaire(p2, l, perp), polaire(p2, l, perp + 180), polaire(p1, l, perp + 180), polaire(p1, l, perp)]
+      .map(function (q) { return [Math.round(q[1] * 1e6) / 1e6, Math.round(q[0] * 1e6) / 1e6]; });
+  }
+  function capEntre(p, q) { var dE = (q[1] - p[1]) / M_LON, dN = (q[0] - p[0]) / M_LAT; return Math.atan2(dE, dN) * 180 / Math.PI; }
+  function distanceM(p, q) { return RT.haversine(p, q) * 1000; }
+  function passePres(geom, point, seuilM) { return geom.some(function (g) { return distanceM(g, point) < seuilM; }); }
+
+  /* Polygones d'exclusion selon l'état du carrefour et le véhicule */
+  function exclusions(etat, veh, ignorerChantier) {
+    var z = DATA.zoneChantier, polys = [], fermes = DATA.etats[etat].closed;
+    if (!ignorerChantier) z.branches.forEach(function (br) {
+      if (fermes.indexOf(br.axe) !== -1) polys.push(rectangleAxe(z.centre, br.cap, br.de, br.a, z.largeur));
+    });
+    if (veh.maxWeight > DATA.traverse.limiteTonnes && !veh.agri) {
+      var vc = z.voieCommunale, L = distanceM(vc.a, vc.b);
+      polys.push(rectangleAxe(vc.a, capEntre(vc.a, vc.b), vc.retrait, L - vc.retrait, vc.largeur));
+    }
+    return polys;
+  }
+
+  /* Décodage du tracé Valhalla (polyline, précision 1e-6) */
+  function decoderShape(str) {
+    var idx = 0, lat = 0, lon = 0, pts = [];
+    while (idx < str.length) {
+      var b, shift = 0, res = 0;
+      do { b = str.charCodeAt(idx++) - 63; res |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lat += (res & 1) ? ~(res >> 1) : (res >> 1); shift = 0; res = 0;
+      do { b = str.charCodeAt(idx++) - 63; res |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lon += (res & 1) ? ~(res >> 1) : (res >> 1);
+      pts.push([lat / 1e6, lon / 1e6]);
+    }
+    return pts;
+  }
+
+  /* Appel du moteur d'itinéraire sur le réseau routier réel */
+  function routerReel(points, veh, polys, signal) {
+    var costing = veh.id === 'pl' ? 'truck' : (veh.id === 'velo' ? 'bicycle' : 'auto');
+    var body = {
+      locations: points.map(function (p) { return { lat: p[0], lon: p[1], type: 'break' }; }),
+      costing: costing,
+      costing_options: costing === 'truck' ? { truck: { weight: 19, height: 4, width: 2.5, length: 12 } } : {},
+      exclude_polygons: polys,
+      units: 'kilometers', language: 'fr-FR',
+      directions_options: { units: 'kilometers', language: 'fr-FR' }
+    };
+    return fetch(DATA.valhallaUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: signal })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.trip) throw new Error(j.error || 'erreur ' + r.status); return j.trip; }); })
+      .then(function (trip) {
+        var geom = [], etapes = [];
+        trip.legs.forEach(function (leg) {
+          var pts = decoderShape(leg.shape); if (geom.length) pts = pts.slice(1); geom = geom.concat(pts);
+          (leg.maneuvers || []).forEach(function (m) {
+            if (m.type === 4 || m.type === 5 || m.type === 6) return; // arrivée
+            etapes.push({ instruction: m.instruction, rues: m.street_names || [], km: m.length || 0 });
+          });
+        });
+        return { geom: geom, km: trip.summary.length, min: trip.summary.time / 60, etapes: etapes };
+      });
+  }
+
+  /* Candidat passant par la voie communale : la cartographie la décrit à sens unique, alors qu'elle est
+     ouverte dans les deux sens pendant les travaux ; on route donc jusqu'à chacun de ses raccordements
+     et on trace la voie elle-même (environ 360 m) entre ses deux extrémités connues. */
+  function routerViaTraverse(depart, arrivee, veh, polys, signal) {
+    var vc = DATA.zoneChantier.voieCommunale;
+    function tenter(ordre) {
+      var p1 = ordre ? vc.b : vc.a, p2 = ordre ? vc.a : vc.b;
+      return Promise.all([routerReel([depart, p1], veh, polys, signal), routerReel([p2, arrivee], veh, polys, signal)])
+        .then(function (parts) {
+          var a = parts[0], b = parts[1], lVc = distanceM(vc.a, vc.b) / 1000;
+          if (passePres(a.geom, DATA.zoneChantier.centre, 45) || passePres(b.geom, DATA.zoneChantier.centre, 45)) throw new Error('traverse le chantier');
+          return { geom: a.geom.concat([p1, p2], b.geom), km: a.km + lVc + b.km, min: a.min + lVc / 20 * 60 + b.min,
+            etapes: a.etapes.concat([{ instruction: 'Prendre la voie communale de traverse (limitée à ' + DATA.traverse.limiteTonnes + ' t)', rues: ['Voie communale RD 159 ⇄ RD 34'], km: lVc }], b.etapes), viaTraverse: true };
+        });
+    }
+    return tenter(true).catch(function () { return tenter(false); }).catch(function () { return null; });
+  }
+
   function alerte(type, ic, html) { return '<div class="alerte ' + type + '"><span class="ic" aria-hidden="true">' + ic + '</span><div>' + html + '</div></div>'; }
 
   function calculerItineraire() {
@@ -167,89 +252,116 @@
     afficherFermetures(r.etat);
     coucheRoute.clearLayers(); coucheSchema.clearLayers();
     if (requeteEnCours) { requeteEnCours.abort(); requeteEnCours = null; }
-
     if (from === to) { zone.innerHTML = alerte('attention', '⚠️', 'Choisissez une destination différente du point de départ.'); return; }
 
-    var relax = (from === 'monclar' || to === 'monclar');
-    var res = RT.calculer(NET, DATA, { from: from, to: to, etat: r.etat, vehicule: veh, relaxChantier: relax });
-    var resNormal = RT.calculer(NET, DATA, { from: from, to: to, etat: 'normal', vehicule: veh, relaxChantier: true });
+    var riverain = (from === 'monclar' || to === 'monclar');
+    var nFrom = NET.nodes[from], nTo = NET.nodes[to];
+    var depart = (positionUtilisateur && from === positionUtilisateur.villageId) ? [positionUtilisateur.lat, positionUtilisateur.lon] : [nFrom.lat, nFrom.lon];
+    var arrivee = [nTo.lat, nTo.lon];
+    var nomDepart = (positionUtilisateur && from === positionUtilisateur.villageId) ? 'Votre position (près de ' + nomNoeud(from) + ')' : nomNoeud(from);
 
-    var html = '<div class="carte etat" style="border-left-color:' + etatDef.couleur + '">' +
+    var entete = '<div class="carte etat" style="border-left-color:' + etatDef.couleur + '">' +
       '<h3>' + esc(fmtDate(iso)) + ' <span class="badge" style="background:' + etatDef.couleur + '">' + esc(etatDef.court) + '</span></h3>' +
       '<p><b>' + esc(r.info.titre) + '</b>' + (r.info.semaine ? ' <span class="note">(' + esc(r.info.semaine) + ')</span>' : '') + '<br><span class="note">' + esc(r.info.detail) + '</span></p>';
+    zone.innerHTML = entete + '<p class="note" id="note-geom">Calcul du trajet sur le réseau routier…</p></div>';
 
-    if (!res.ok) {
-      html += alerte('danger', '⛔', 'Aucun itinéraire trouvé pour ce type de véhicule à cette date entre <b>' + esc(nomNoeud(from)) + '</b> et <b>' + esc(nomNoeud(to)) + '</b>. Suivez la déviation mise en place sur le terrain ou contactez la mairie.') + '</div>';
-      zone.innerHTML = html; return;
-    }
+    // marqueurs départ / arrivée immédiats
+    L.circleMarker(depart, { radius: 8, color: '#2e7d32', fillColor: '#2e7d32', fillOpacity: 1 }).bindTooltip('Départ').addTo(coucheSchema);
+    L.circleMarker(arrivee, { radius: 8, color: '#c62828', fillColor: '#c62828', fillOpacity: 1 }).bindTooltip('Arrivée').addTo(coucheSchema);
+    map.fitBounds(L.latLngBounds([depart, arrivee, DATA.zoneChantier.centre]).pad(0.2));
 
-    var etapes = RT.etapes(NET, res);
-    var passeChantier = res.edges.some(function (e) { return e.kind === 'chantier'; });
-    html += '<div class="kpi"><div><b>' + fmtKm(res.km) + '</b><span id="kpi-km-note">distance estimée</span></div><div><b>' + fmtMin(res.min) + '</b><span id="kpi-min-note">durée estimée</span></div>';
-    if (resNormal.ok && res.km - resNormal.km > 0.5) html += '<div><b>+' + fmtKm(res.km - resNormal.km) + '</b><span>détour dû aux travaux</span></div>';
-    html += '</div>';
+    var ctrl = new AbortController(); requeteEnCours = ctrl;
+    var timer = setTimeout(function () { ctrl.abort(); }, 12000);
+    var polys = exclusions(r.etat, veh, riverain);
+    var polysNormal = exclusions('normal', veh, true);
+    if (!DATA.valhallaUrl || !window.fetch || !window.AbortController) { afficherRepli(entete, from, to, r, veh, riverain, depart); return; }
 
-    if (r.etat !== 'normal' && !passeChantier) html += alerte('attention', '🚧', 'Carrefour de Monclar : <b>' + esc(etatDef.label) + '</b>. Cet itinéraire contourne la zone de travaux.');
-    if (r.etat !== 'normal' && passeChantier && !res.flags.riverain) html += alerte('ok', '✅', 'Votre trajet traverse Monclar par la RD restée ouverte. Roulez au pas dans la zone de chantier et respectez la signalisation.');
-    if (res.flags.riverain) html += alerte('danger', '🏠', 'Votre départ ou votre arrivée se situe dans la zone de travaux : l\'accès des riverains est maintenu selon l\'avancement du chantier, rapprochez-vous du chef de chantier ou de la mairie.');
-    if (res.flags.traverse) html += alerte('attention', '⚖️', 'Vous empruntez la <b>voie communale de traverse limitée à ' + DATA.traverse.limiteTonnes + ' t</b> (sauf véhicules agricoles) : voie étroite, roulez au pas et laissez le passage aux engins de chantier.');
-    if (veh.id === 'pl') html += alerte('info', '🚛', 'Plus de 9 t : la voie communale de traverse vous est interdite ; l\'itinéraire suit les routes départementales des déviations officielles (D1 par Bassoues et la RD 943, D2 par Saint-Maur, Laas et Tillac).');
-    if (veh.id === 'velo') html += alerte('info', '🚲', 'À vélo, le chantier reste infranchissable ; empruntez la voie communale ou les routes départementales indiquées.');
-    if (r.etat === 'normal' && r.hors === null && r.periode && r.periode.debut >= '2026-11-07') html += alerte('info', 'ℹ️', 'Fin des travaux principaux : la réouverture complète du carrefour doit être confirmée par la mairie ; sur place, suivez la signalisation (30 km/h).');
-    html += alerte('info', '🪧', 'Sur place, suivez la signalisation temporaire et les indications des équipes.');
-
-    html += '<ol class="etapes">';
-    html += '<li><span class="num dep">D</span><span class="route">' + esc(positionUtilisateur && from === positionUtilisateur.villageId ? 'Votre position (près de ' + nomNoeud(from) + ')' : nomNoeud(from)) + '<small>Départ</small></span><span></span></li>';
-    etapes.forEach(function (et, i) {
-      var via = et.parcours.slice(1, -1).map(nomNoeud).filter(function (n, idx, arr) { return NET.nodes[et.parcours[idx + 1]] && NET.nodes[et.parcours[idx + 1]].type === 'village'; });
-      var sub = (NET.nodes[et.to] && NET.nodes[et.to].type === 'junction' ? 'vers ' : 'jusqu\'à ') + nomNoeud(et.to) + (via.length ? ' via ' + via.join(', ') : '');
-      if (et.maxWeight) sub += ' – limité à ' + et.maxWeight + ' t';
-      html += '<li><span class="num">' + (i + 1) + '</span><span class="route">' + esc(et.road) + '<small>' + esc(sub) + '</small></span><span class="km">' + fmtKm(et.km) + '</span></li>';
+    var traverseUtile = !riverain && DATA.etats[r.etat].closed.length > 0 && (veh.maxWeight <= DATA.traverse.limiteTonnes || veh.agri);
+    Promise.all([
+      routerReel([depart, arrivee], veh, polys, ctrl.signal).catch(function (e) { return { erreur: e }; }),
+      polys.length === polysNormal.length ? Promise.resolve(null) : routerReel([depart, arrivee], veh, polysNormal, ctrl.signal).catch(function () { return null; }),
+      traverseUtile ? routerViaTraverse(depart, arrivee, veh, polys, ctrl.signal) : Promise.resolve(null)
+    ]).then(function (res) {
+      clearTimeout(timer); if (ctrl !== requeteEnCours) return;
+      var direct = res[0].erreur ? null : res[0], viaVc = res[2];
+      var choisi = direct;
+      if (viaVc && (!direct || viaVc.km < direct.km * 0.97)) choisi = viaVc;
+      if (!choisi) throw res[0].erreur || new Error('aucun trajet');
+      afficherResultatReel(entete, choisi, res[1], r, veh, riverain, nomDepart, to);
+    }).catch(function (err) {
+      clearTimeout(timer); if (ctrl !== requeteEnCours) return;
+      afficherRepli(entete, from, to, r, veh, riverain, depart, err);
     });
-    html += '<li><span class="num arr">A</span><span class="route">' + esc(nomNoeud(to)) + '<small>Arrivée</small></span><span></span></li></ol>';
-    html += '<p class="note" id="note-geom">Tracé schématique. Chargement du tracé routier détaillé…</p></div>';
-    zone.innerHTML = html;
-
-    // tracé schématique immédiat
-    var geom = res.geom.slice();
-    if (positionUtilisateur && from === positionUtilisateur.villageId) geom.unshift([positionUtilisateur.lat, positionUtilisateur.lon]);
-    var schema = L.polyline(geom, { color: '#1e4b3d', weight: 5, opacity: .8, dashArray: '10 8' }).addTo(coucheSchema);
-    L.circleMarker(geom[0], { radius: 8, color: '#2e7d32', fillColor: '#2e7d32', fillOpacity: 1 }).bindTooltip('Départ').addTo(coucheSchema);
-    L.circleMarker(geom[geom.length - 1], { radius: 8, color: '#c62828', fillColor: '#c62828', fillOpacity: 1 }).bindTooltip('Arrivée').addTo(coucheSchema);
-    map.fitBounds(schema.getBounds().pad(0.15));
-
-    chargerTraceRoutier(geom, res);
   }
 
-  /* Tracé routier détaillé via le service OSRM (si joignable) */
-  function chargerTraceRoutier(points, res) {
-    var note = $('#note-geom');
-    if (!DATA.osrmUrl || !window.fetch || !window.AbortController) { if (note) note.textContent = 'Tracé schématique (le service de calcul de tracé routier est désactivé).'; return; }
-    // limite le nombre de points envoyés (les points intermédiaires des longues RD ne sont pas nécessaires)
-    var pts = points.filter(function (p, i) { return i === 0 || i === points.length - 1 || RT.haversine(p, points[i - 1]) > 0.05; });
-    var coords = pts.map(function (p) { return p[1].toFixed(5) + ',' + p[0].toFixed(5); }).join(';');
-    var ctrl = new AbortController(); requeteEnCours = ctrl;
-    var timer = setTimeout(function () { ctrl.abort(); }, 9000);
-    fetch(DATA.osrmUrl + coords + '?overview=full&geometries=geojson&steps=false', { signal: ctrl.signal })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        clearTimeout(timer);
-        if (!j.routes || !j.routes[0]) throw new Error('pas de route');
-        var route = j.routes[0];
-        coucheSchema.eachLayer(function (l) { if (l instanceof L.Polyline && !(l instanceof L.CircleMarker)) coucheSchema.removeLayer(l); });
-        var line = L.geoJSON(route.geometry, { style: { color: '#1e4b3d', weight: 6, opacity: .9 } }).addTo(coucheRoute);
-        L.geoJSON(route.geometry, { style: { color: '#fff', weight: 10, opacity: .6 } }).addTo(coucheRoute).bringToBack();
-        map.fitBounds(line.getBounds().pad(0.12));
-        var km = route.distance / 1000, min = route.duration / 60;
-        var kpiKm = $('#kpi-km-note'), kpiMin = $('#kpi-min-note');
-        if (kpiKm) { kpiKm.previousElementSibling.textContent = fmtKm(km); kpiKm.textContent = 'distance par la route'; }
-        if (kpiMin) { kpiMin.previousElementSibling.textContent = fmtMin(min); kpiMin.textContent = 'durée par la route'; }
-        if (note) note.textContent = 'Tracé routier calculé sur le réseau OpenStreetMap (OSRM). Itinéraire indicatif : la signalisation en place prévaut.';
-      })
-      .catch(function () {
-        clearTimeout(timer);
-        if (note) note.textContent = 'Tracé schématique (service de tracé routier momentanément indisponible). L\'itinéraire et les distances restent indicatifs.';
-      });
+  function alertesCommunes(r, veh, riverain, passeChantier, passeTraverse) {
+    var etatDef = DATA.etats[r.etat], html = '';
+    if (r.etat !== 'normal' && !passeChantier) html += alerte('attention', '🚧', 'Carrefour de Monclar : <b>' + esc(etatDef.label) + '</b>. Cet itinéraire contourne la zone de travaux.');
+    if (r.etat !== 'normal' && passeChantier && !riverain) html += alerte('ok', '✅', 'Votre trajet traverse Monclar par la RD restée ouverte. Roulez au pas dans la zone de chantier et respectez la signalisation.');
+    if (riverain && r.etat !== 'normal') html += alerte('danger', '🏠', 'Votre départ ou votre arrivée se situe dans la zone de travaux : l\'accès des riverains est maintenu selon l\'avancement du chantier, rapprochez-vous du chef de chantier ou de la mairie. Le tracé ne tient pas compte des fermetures du carrefour.');
+    if (passeTraverse) html += alerte('attention', '⚖️', 'Vous empruntez la <b>voie communale de traverse limitée à ' + DATA.traverse.limiteTonnes + ' t</b> (sauf véhicules agricoles) : voie étroite, roulez au pas et laissez le passage aux engins de chantier.');
+    if (veh.id === 'pl') html += alerte('info', '🚛', 'Plus de 9 t : la voie communale de traverse vous est interdite ; l\'itinéraire est calculé avec un profil poids lourd sur les routes départementales.');
+    if (veh.id === 'velo') html += alerte('info', '🚲', 'À vélo, le chantier reste infranchissable ; l\'itinéraire est calculé avec un profil cycliste.');
+    if (r.etat === 'normal' && r.hors === null && r.periode && r.periode.debut >= '2026-11-07') html += alerte('info', 'ℹ️', 'Fin des travaux principaux : la réouverture complète du carrefour doit être confirmée par la mairie ; sur place, suivez la signalisation (30 km/h).');
+    html += alerte('info', '🪧', 'Sur place, suivez la signalisation temporaire et les indications des équipes.');
+    return html;
+  }
+
+  function afficherResultatReel(entete, res, resNormal, r, veh, riverain, nomDepart, to) {
+    var z = DATA.zoneChantier;
+    var passeChantier = passePres(res.geom, z.centre, 45);
+    var vcMid = [(z.voieCommunale.a[0] + z.voieCommunale.b[0]) / 2, (z.voieCommunale.a[1] + z.voieCommunale.b[1]) / 2];
+    var passeTraverse = !!res.viaTraverse || passePres(res.geom, vcMid, 40);
+    var fermes = DATA.etats[r.etat].closed;
+    var html = entete;
+    if (passeChantier && fermes.length && !riverain) {
+      html += alerte('danger', '⛔', 'Le trajet calculé traverse la zone de travaux fermée : le service de calcul n\'a pas pu appliquer la fermeture. Suivez la déviation signalée sur place.') + '</div>';
+      $('#resultat').innerHTML = html; return;
+    }
+    html += '<div class="kpi"><div><b>' + fmtKm(res.km) + '</b><span>par la route</span></div><div><b>' + fmtMin(res.min) + '</b><span>durée estimée</span></div>';
+    if (resNormal && res.km - resNormal.km > 0.3) html += '<div><b>+' + fmtKm(res.km - resNormal.km) + '</b><span>détour dû aux travaux</span></div>';
+    html += '</div>';
+    html += alertesCommunes(r, veh, riverain, passeChantier, passeTraverse);
+    html += '<ol class="etapes">';
+    html += '<li><span class="num dep">D</span><span class="route">' + esc(nomDepart) + '<small>Départ</small></span><span></span></li>';
+    var n = 0;
+    res.etapes.forEach(function (et) {
+      if (et.km < 0.05 && n > 0) return;
+      n++;
+      html += '<li><span class="num">' + n + '</span><span class="route">' + esc(et.instruction) + (et.rues.length ? '<small>' + esc(et.rues.join(', ')) + '</small>' : '') + '</span><span class="km">' + (et.km ? fmtKm(et.km) : '') + '</span></li>';
+    });
+    html += '<li><span class="num arr">A</span><span class="route">' + esc(nomNoeud(to)) + '<small>Arrivée</small></span><span></span></li></ol>';
+    html += '<p class="note">Itinéraire calculé sur le réseau routier OpenStreetMap (moteur Valhalla) en excluant les tronçons fermés. Itinéraire indicatif : la signalisation en place prévaut.</p></div>';
+    $('#resultat').innerHTML = html;
+    coucheRoute.clearLayers();
+    L.polyline(res.geom, { color: '#fff', weight: 10, opacity: .6 }).addTo(coucheRoute);
+    var line = L.polyline(res.geom, { color: '#1e4b3d', weight: 6, opacity: .9 }).addTo(coucheRoute);
+    map.fitBounds(line.getBounds().pad(0.12));
+  }
+
+  /* Repli : itinéraire schématique sur le graphe local si le service est indisponible */
+  function afficherRepli(entete, from, to, r, veh, riverain, depart, err) {
+    var res = RT.calculer(NET, DATA, { from: from, to: to, etat: r.etat, vehicule: veh, relaxChantier: riverain });
+    var html = entete;
+    if (!res.ok) {
+      html += alerte('danger', '⛔', 'Le service de calcul est indisponible et aucun itinéraire schématique n\'a été trouvé pour ce véhicule à cette date. Suivez la déviation signalée sur place ou réessayez plus tard.') + '</div>';
+      $('#resultat').innerHTML = html; return;
+    }
+    var etapes = RT.etapes(NET, res);
+    var passeChantier = res.edges.some(function (e) { return e.kind === 'chantier'; });
+    html += alerte('attention', '📡', 'Le service de calcul sur le réseau routier est momentanément indisponible : voici un <b>itinéraire schématique</b> (villages et routes à suivre), sans tracé détaillé.');
+    html += '<div class="kpi"><div><b>≈ ' + fmtKm(res.km) + '</b><span>distance estimée</span></div></div>';
+    html += alertesCommunes(r, veh, riverain, passeChantier, !!res.flags.traverse);
+    html += '<ol class="etapes"><li><span class="num dep">D</span><span class="route">' + esc(nomNoeud(from)) + '<small>Départ</small></span><span></span></li>';
+    etapes.forEach(function (et, i) {
+      var sub = (NET.nodes[et.to] && NET.nodes[et.to].type === 'junction' ? 'vers ' : 'jusqu\'à ') + nomNoeud(et.to);
+      html += '<li><span class="num">' + (i + 1) + '</span><span class="route">' + esc(et.road) + '<small>' + esc(sub) + '</small></span><span class="km">≈ ' + fmtKm(et.km) + '</span></li>';
+    });
+    html += '<li><span class="num arr">A</span><span class="route">' + esc(nomNoeud(to)) + '<small>Arrivée</small></span><span></span></li></ol></div>';
+    $('#resultat').innerHTML = html;
+    var geom = res.geom.slice(); geom[0] = depart;
+    var schema = L.polyline(geom, { color: '#1e4b3d', weight: 5, opacity: .8, dashArray: '10 8' }).addTo(coucheSchema);
+    map.fitBounds(schema.getBounds().pad(0.15));
   }
 
   /* ---------- calendrier ---------- */
