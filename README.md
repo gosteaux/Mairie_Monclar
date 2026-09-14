@@ -13,7 +13,7 @@ véhicule, à la date de leur trajet et à leur destination**.
   - prise en compte du **planning de fermeture** (partielle par axe, totale, par zones) ;
   - prise en compte de la **limite de 9 t** sur la voie communale de traverse (sauf véhicules agricoles) ;
   - affichage des tronçons barrés, de la voie communale, des étapes, de la distance et du détour dû aux travaux ;
-  - tracé routier détaillé calculé dans le navigateur par le service public OSRM, avec repli sur un tracé schématique si le service est indisponible.
+  - itinéraire calculé dans le navigateur sur le réseau routier réel par le moteur Valhalla (instance publique FOSSGIS, sans clé), avec polygones d'exclusion sur les branches fermées du carrefour et sur la voie communale pour les plus de 9 t, profil camion pour les poids lourds ; repli sur un itinéraire schématique si le service est indisponible.
 - **Calendrier** des périodes de travaux et des fermetures (semaines 35 à 49 de 2026).
 - **Présentation du projet** (aménagements, chiffres clés, acteurs).
 - **Déviations** : voie communale et règle des 9 t, périmètre du projet d'arrêté, corridors officiels D1 et D2, emplacement des panneaux.
@@ -67,8 +67,10 @@ Tout se modifie dans `assets/js/data.js` sans toucher au code :
   il suffit de modifier les dates.
 - **Contact de la mairie** : `commune.telephone`, `commune.courriel`.
 - **Textes** des travaux, chiffres clés, signalisation, périmètre de l'arrêté et corridors de déviation.
-- **Services externes** : `osrmUrl` (calcul du tracé routier ; vider la chaîne pour n'afficher que le
-  tracé schématique) et `tuiles` (fond de carte).
+- **Services externes** : `valhallaUrl` (calcul d'itinéraire ; vider la chaîne pour n'afficher que
+  l'itinéraire schématique) et `tuiles` (fond de carte).
+- **Zone de chantier** : `zoneChantier` (centre du carrefour, longueur et orientation des quatre branches
+  exclues, extrémités de la voie communale). C'est cette géométrie qui interdit le passage au moteur.
 
 Le réseau routier (`assets/js/network.js`) contient les communes (`type: "village"`) et les jonctions
 autour du carrefour (`type: "junction"`). Chaque tronçon (`edges`) porte :
@@ -93,7 +95,7 @@ les seules valeurs sûres, qui structurent le réseau :
   500 m) ; Mirande et Miélan d'après leurs coordonnées connues. À remplacer par les nœuds de village
   OpenStreetMap pour plus de précision.
 - **Corridors D1 et D2** : décrits par le projet d'arrêté (article 2) ; le tracé détaillé est fourni par le
-  réseau routier réel (OSRM) au moment du calcul.
+  réseau routier réel (Valhalla) au moment du calcul.
 
 ## Points à vérifier par la mairie
 
@@ -120,5 +122,5 @@ les seules valeurs sûres, qui structurent le réseau :
 
 Code du site : libre de réutilisation par la commune. Leaflet : BSD-2-Clause (voir
 `assets/vendor/leaflet/LICENSE`). Fond de carte et données routières : © contributeurs OpenStreetMap,
-licence ODbL ; le service de tuiles et le service OSRM de démonstration sont soumis à leurs conditions
-d'utilisation respectives (usage modéré).
+licence ODbL ; le service de tuiles OSM et l'instance Valhalla de FOSSGIS sont soumis à leurs conditions
+d'utilisation respectives (usage modéré, attribution).
