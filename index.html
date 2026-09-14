@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Travaux de la traversée de Monclar-sur-l'Osse – Quel itinéraire prendre ?</title>
+  <meta name="description" content="Sécurisation du carrefour RD 34 / RD 159 à Monclar-sur-l'Osse : calendrier des fermetures, déviations et calcul de l'itinéraire adapté à votre véhicule pour les habitants de Bars, Pouylebon, Saint-Christaud et des villages voisins.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231f4e79'/%3E%3Ctext x='32' y='42' font-size='30' text-anchor='middle'%3E🚧%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#"><span class="blason" aria-hidden="true">🚧</span><span>Monclar-sur-l'Osse<small>Travaux de la traversée du village</small></span></a>
+    <nav class="menu" aria-label="Sections">
+      <a href="#itineraire">Itinéraire</a>
+      <a href="#calendrier">Calendrier</a>
+      <a href="#projet">Le projet</a>
+      <a href="#deviations">Déviations</a>
+      <a href="#riverains">Riverains</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <h1>Quelle route prendre pendant les travaux du carrefour de Monclar&nbsp;?</h1>
+    <p>La commune sécurise la traversée du village au carrefour des RD&nbsp;34 et RD&nbsp;159 de septembre à novembre 2026. Habitants de Bars, Pouylebon, Saint-Christaud et des villages voisins&nbsp;: indiquez votre point de départ, votre destination, la date et votre véhicule pour connaître l'itinéraire adapté.</p>
+    <a class="cta" href="#itineraire">Trouver mon itinéraire</a>
+  </div>
+</div>
+
+<div class="wrap etat-jour" id="etat-jour">
+  <div class="carte"><span class="pastille">…</span><div class="detail">Chargement de l'état du carrefour…</div></div>
+</div>
+
+<section id="itineraire">
+  <div class="wrap">
+    <h2>Mon itinéraire</h2>
+    <p class="intro">L'outil tient compte du <b>planning du chantier</b> (fermeture partielle ou totale du carrefour), de la <b>limite de 9&nbsp;t</b> sur la voie communale de traverse et du <b>type de véhicule</b>. Les itinéraires sont indicatifs&nbsp;: la signalisation en place sur le terrain prévaut toujours.</p>
+    <div class="outil">
+      <form class="carte formulaire" id="form-itineraire">
+        <label for="depart">Départ</label>
+        <div class="ligne">
+          <select id="depart" name="depart" required></select>
+          <button type="button" class="btn btn-sec" id="btn-geo" title="Utiliser ma position">📍 Ma position</button>
+        </div>
+        <p class="geo-info" id="geo-info"></p>
+        <label for="arrivee">Destination</label>
+        <div class="ligne">
+          <select id="arrivee" name="arrivee" required></select>
+          <button type="button" class="btn btn-sec" id="btn-inverser" title="Inverser départ et destination">⇅</button>
+        </div>
+        <label for="date">Date du trajet</label>
+        <input type="date" id="date" name="date" required>
+        <label>Type de véhicule</label>
+        <div class="vehicules" id="vehicules"></div>
+        <button type="submit" class="btn btn-primaire">Calculer l'itinéraire</button>
+        <p class="note" style="margin-top:.8rem">Exemples&nbsp;:
+          <button type="button" class="btn btn-lien" data-exemple="bars|mirande|2026-10-12|vl">Bars → Mirande en voiture (12 oct.)</button> ·
+          <button type="button" class="btn btn-lien" data-exemple="pouylebon|saint_christaud|2026-10-12|vl">Pouylebon → Saint-Christaud (12 oct.)</button> ·
+          <button type="button" class="btn btn-lien" data-exemple="mirande|bars|2026-10-12|pl">Mirande → Bars en poids lourd (12 oct.)</button> ·
+          <button type="button" class="btn btn-lien" data-exemple="saint_christaud|mirande|2026-09-16|agri">Saint-Christaud → Mirande en tracteur (16 sept.)</button>
+        </p>
+      </form>
+      <div>
+        <div id="map" role="region" aria-label="Carte des itinéraires"></div>
+        <div class="legende">
+          <span><i style="border-color:#1f4e79"></i>Itinéraire conseillé</span>
+          <span><i style="border-color:#c62828"></i>Tronçon barré</span>
+          <span><i class="tiret" style="border-color:#ef6c00"></i>Voie communale (limitée à 9&nbsp;t)</span>
+          <span><span class="pt" style="background:#c62828">🚧</span>Carrefour en travaux</span>
+        </div>
+        <div class="resultat" id="resultat" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="calendrier">
+  <div class="wrap">
+    <h2>Calendrier des fermetures</h2>
+    <p class="intro">Planning prévisionnel établi par l'entreprise CARRERE SAS (mis à jour le 4 septembre 2026). Il peut évoluer selon la météo et l'avancement du chantier.</p>
+    <div class="semaines" id="semaines" aria-label="État du carrefour par semaine"></div>
+    <div class="legende">
+      <span><span class="pt" style="background:#2e7d32"></span>Circulation normale</span>
+      <span><span class="pt" style="background:#ef6c00"></span>Une RD barrée dans la traversée</span>
+      <span><span class="pt" style="background:#c62828"></span>Carrefour fermé (totalement ou par zones)</span>
+    </div>
+    <ol class="periodes" id="periodes"></ol>
+    <figure style="margin-top:1.2rem">
+      <img src="assets/img/planning-travaux.jpg" alt="Planning des travaux par semaine, du 24 août au 27 novembre 2026" loading="lazy">
+      <figcaption>Planning détaillé des tâches (CARRERE SAS, 04/09/2026) – à télécharger dans la rubrique documents.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="projet">
+  <div class="wrap">
+    <h2>Le projet de sécurisation</h2>
+    <p class="intro">Le carrefour des RD&nbsp;34 (Montesquiou – Bars) et RD&nbsp;159 (Marciac – Mirande) est le cœur du village&nbsp;: mairie, école, arrêt du transport scolaire. Les vitesses d'approche élevées et l'absence de trottoirs rendaient la traversée dangereuse pour les piétons. L'aménagement resserre les voies, crée des trottoirs et des îlots et instaure une zone à 30&nbsp;km/h.</p>
+    <div class="chiffres" id="chiffres"></div>
+    <div class="grille grille-3 travaux" id="travaux"></div>
+    <div class="grille grille-2" style="margin-top:1.2rem">
+      <figure>
+        <img src="assets/img/plan-general-amenagements.jpg" alt="Plan général des aménagements du carrefour : bordures, îlots, trottoirs, espaces verts" loading="lazy">
+        <figcaption>Plan général des aménagements (dossier de consultation des entreprises – géomètres experts associés).</figcaption>
+      </figure>
+      <div class="carte">
+        <h3>Qui fait quoi&nbsp;?</h3>
+        <ul class="acteurs" id="acteurs"></ul>
+        <h3 style="margin-top:1rem">Documents</h3>
+        <div class="docs" id="documents"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="deviations">
+  <div class="wrap">
+    <h2>Déviations et règle des 9 tonnes</h2>
+    <div class="regle9t" style="margin-bottom:1.2rem">
+      <div class="panneau" aria-hidden="true"><span id="limite-t">9 t</span></div>
+      <div>
+        <h3>Voie communale de traverse&nbsp;: limitée à 9&nbsp;t, sauf véhicules agricoles</h3>
+        <p id="traverse-desc"></p>
+        <p class="note">Les véhicules de plus de 9&nbsp;t (camions, autocars, transport scolaire) doivent suivre la déviation par les routes départementales. Les engins agricoles ne sont pas concernés par cette limite.</p>
+      </div>
+    </div>
+    <div class="grille grille-2">
+      <div class="carte">
+        <h3>Véhicules légers et moins de 9&nbsp;t</h3>
+        <p>Pendant la fermeture du carrefour, la circulation locale contourne la zone de travaux par les voies communales&nbsp;: la <b>voie communale de traverse</b> entre la RD&nbsp;159 (côté mairie) et la RD&nbsp;34 (côté sud), et le <b>Chemin du Rey</b> entre la RD&nbsp;34 (1&nbsp;km au nord) et la RD&nbsp;159 (2&nbsp;km à l'ouest). Ces voies sont étroites&nbsp;: roulez au pas et facilitez les croisements.</p>
+        <p>Selon votre trajet, la déviation par les départementales (Pallanne, Saint-Maur, Estipouy…) peut rester plus rapide&nbsp;: l'outil d'itinéraire compare les deux.</p>
+      </div>
+      <div class="carte">
+        <h3>Poids lourds, autocars et plus de 9&nbsp;t</h3>
+        <p>La déviation est assurée par les routes départementales&nbsp;:</p>
+        <ul>
+          <li><b>Axe Marciac ⇄ Mirande (RD&nbsp;159)</b>&nbsp;: RD&nbsp;3 par Monlezun et Tillac, RD&nbsp;16 jusqu'à Saint-Maur puis RD&nbsp;1021 vers Mirande (entrée par la route de Tarbes).</li>
+          <li><b>Axe Montesquiou ⇄ Bars / Miélan (RD&nbsp;34)</b>&nbsp;: par Estipouy et Mirande, puis RD&nbsp;1021 et RD&nbsp;34 depuis Saint-Maur.</li>
+        </ul>
+        <p class="note">Les panneaux KC1 «&nbsp;Route barrée à …&nbsp;» sont placés aux derniers carrefours permettant de faire demi-tour ou de bifurquer (voir tableau ci-dessous).</p>
+      </div>
+    </div>
+    <div class="grille grille-2" style="margin-top:1.2rem">
+      <figure>
+        <img src="assets/img/signalisation-deviation-proche.jpg" alt="Plan de signalisation de la déviation aux abords du village avec les panneaux route barrée à 500 m, 1 km et 2 km" loading="lazy">
+        <figcaption>Signalisation de déviation aux abords de l'agglomération (DESC CARRERE SAS).</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/signalisation-agglo.jpg" alt="Plan de signalisation en agglomération : zone des travaux et panneaux aux quatre entrées" loading="lazy">
+        <figcaption>Signalisation en agglomération&nbsp;: zone des travaux et panneaux K8, B0, KC1, AK14 aux quatre accès.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/deviation-rd-carte.jpg" alt="Carte des routes départementales de déviation entre Marciac, Tillac, Saint-Maur, Mirande et Montesquiou" loading="lazy">
+        <figcaption>Déviation par les routes départementales (RD&nbsp;3, RD&nbsp;16, RD&nbsp;1021) pour le trafic de transit et les poids lourds.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/deviation-mirande-zoom.jpg" alt="Zoom sur la déviation dans l'agglomération de Mirande entre la route de Monclar et la route de Tarbes" loading="lazy">
+        <figcaption>Zoom sur la déviation dans l'agglomération de Mirande (RD&nbsp;159 route de Monclar ⇄ RD&nbsp;1021 route de Tarbes).</figcaption>
+      </figure>
+    </div>
+    <h3 style="margin-top:1.4rem">Où sont les panneaux «&nbsp;Route barrée&nbsp;»&nbsp;?</h3>
+    <div class="tab-wrap"><table class="signal"><thead><tr><th>Emplacement</th><th>Signalisation</th></tr></thead><tbody id="signalisation"></tbody></table></div>
+  </div>
+</section>
+
+<section id="riverains">
+  <div class="wrap">
+    <h2>Riverains et infos pratiques</h2>
+    <div class="grille grille-3">
+      <div class="carte"><h3>🏠 Accès aux habitations</h3><p>L'accès des riverains, des secours et des services (collecte, livraisons) est maintenu dans la mesure du possible, selon la zone de travaux en cours. En cas de difficulté, adressez-vous au chef de chantier sur place ou à la mairie.</p></div>
+      <div class="carte"><h3>🚌 Transport scolaire</h3><p>Pendant la fermeture du carrefour, les circuits de transport scolaire empruntent la déviation par les routes départementales (véhicules de plus de 9&nbsp;t). Les horaires et points d'arrêt provisoires sont communiqués par le transporteur et affichés en mairie.</p></div>
+      <div class="carte"><h3>🚶 Piétons</h3><p>La zone de travaux est interdite aux piétons hors cheminements balisés. À l'issue du chantier, des trottoirs, des passages piétons et une zone 30 sécurisent l'accès à la mairie et à l'école.</p></div>
+      <div class="carte"><h3>📅 Dates à retenir</h3><ul><li><b>14 sept. 2026</b>&nbsp;: installation du chantier, déviation mise en place les 15 et 16&nbsp;septembre.</li><li><b>5 oct. → 6 nov. 2026</b>&nbsp;: carrefour fermé (totalement puis par zones).</li><li><b>7 nov. 2026</b>&nbsp;: réouverture prévue de la traversée aménagée.</li><li><b>23 → 27 nov. 2026</b>&nbsp;: marquage au sol.</li></ul></div>
+      <div class="carte"><h3>🏛️ Contact</h3><p id="contact"></p><p class="note">Les informations de cette page sont mises à jour par la mairie à partir des documents du chantier.</p></div>
+      <div class="carte"><h3>ℹ️ Bon à savoir</h3><p>La limite de 9&nbsp;t sur la voie communale de traverse protège une chaussée qui n'est pas dimensionnée pour les poids lourds. Elle ne s'applique pas aux véhicules agricoles. Merci de la respecter&nbsp;: elle sera contrôlée.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b>Mairie de Monclar-sur-l'Osse</b> – Sécurisation et aménagements de la traversée du village (RD&nbsp;34 / RD&nbsp;159), 2026.</p>
+    <p>Sources&nbsp;: DESC de déviation et planning (CARRERE SAS), plan d'exécution indice B (XMGE), plan de déviation par RD. Itinéraires et dates indicatifs&nbsp;: la signalisation mise en place sur le terrain prévaut.</p>
+    <p>Fond de carte © <a href="https://www.openstreetmap.org/copyright" rel="noopener">contributeurs OpenStreetMap</a> · Tracés routiers calculés par le service <a href="https://project-osrm.org/" rel="noopener">OSRM</a> · Cartographie <a href="https://leafletjs.com/" rel="noopener">Leaflet</a>. <span id="annee"></span></p>
+  </div>
+</footer>
+
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/network.js"></script>
+<script src="assets/js/router.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
